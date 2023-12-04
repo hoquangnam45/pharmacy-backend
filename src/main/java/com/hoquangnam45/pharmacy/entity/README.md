@@ -1,0 +1,1 @@
+Entity that end with _Audit is immutable, once an audit instance is created, it can't be deleted or updated, and this immutability is required since audit info will be linked to inside an order to prevent fraud in-case of dispute, and to easily provide evidence
