@@ -17,6 +17,8 @@ pharma:
     issuer: ${PHARMA_JWT_ISSUER:example}
     accessTokenExpirationInMin: 60
     refreshTokenExpirationInMin: 43830
+  upload:
+    type: STORED
 server:
   port: 8080
   servlet:

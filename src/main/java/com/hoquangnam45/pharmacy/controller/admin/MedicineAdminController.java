@@ -9,6 +9,7 @@ import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.UpdateListingRequest;
 import com.hoquangnam45.pharmacy.service.MedicineService;
+import com.hoquangnam45.pharmacy.service.S3UploadService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.websocket.server.PathParam;
@@ -21,7 +22,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,9 +37,11 @@ import java.util.stream.Collectors;
 @Transactional
 public class MedicineAdminController {
     private final MedicineService medicineService;
+    private final S3UploadService uploadService;
 
-    public MedicineAdminController(MedicineService medicineService) {
+    public MedicineAdminController(MedicineService medicineService, S3UploadService uploadService) {
         this.medicineService = medicineService;
+        this.uploadService = uploadService;
     }
 
     @PostMapping
@@ -95,5 +100,20 @@ public class MedicineAdminController {
                 .orElseThrow(() -> ApiError.notFound("Could not find medicine"))
                 .map(MedicinePackaging::getId)
                 .collect(Collectors.toList())));
+    }
+
+    @PostMapping("images")
+    public ResponseEntity<GenericResponse> createUploadSession() {
+        return uploadService.
+    }
+
+    @PostMapping("images/{sessionId}")
+    public ResponseEntity<GenericResponse> addUploadPlaceholder() {
+
+    }
+
+    @PostMapping("images/{sessionId}/{itemId}/upload")
+    public ResponseEntity<GenericResponse> uploadFile(@RequestParam("file") MultipartFile file) {
+
     }
 }

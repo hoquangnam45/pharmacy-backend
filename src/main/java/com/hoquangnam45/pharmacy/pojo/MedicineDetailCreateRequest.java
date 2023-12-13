@@ -22,4 +22,5 @@ public class MedicineDetailCreateRequest {
     private final String sideEffect;
     private final UUID producerId;
     private final UsageType usageType;
+    private final String uploadSessionId;
 }
