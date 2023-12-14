@@ -1,7 +1,6 @@
 package com.hoquangnam45.pharmacy.entity;
 
 import com.hoquangnam45.pharmacy.constant.PackagingUnit;
-import com.hoquangnam45.pharmacy.constant.PermissionType;
 import com.hoquangnam45.pharmacy.constant.UsageType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,11 +12,13 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -30,7 +31,11 @@ public class Medicine {
     private UUID id;
     private String name;
     private String description;
-    private String imagePath;
+
+    @OneToOne
+    @JoinColumn(name = "preview_id", referencedColumnName = "id")
+    private MedicinePreview mainPreview;
+
     @ManyToMany
     @JoinTable(
             name = "medicine_tag_x",
@@ -50,4 +55,7 @@ public class Medicine {
     @ManyToOne
     @JoinColumn(name = "producer_id", referencedColumnName = "id")
     private Producer producer;
+
+    @OneToMany(mappedBy = "medicine")
+    private Set<MedicinePreview> previews;
 }

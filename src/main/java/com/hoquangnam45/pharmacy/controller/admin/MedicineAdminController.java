@@ -8,11 +8,19 @@ import com.hoquangnam45.pharmacy.pojo.ProducerCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.UpdateListingRequest;
+import com.hoquangnam45.pharmacy.pojo.UploadSession;
+import com.hoquangnam45.pharmacy.pojo.UploadSessionConfig;
+import com.hoquangnam45.pharmacy.pojo.UploadSessionCreateResponse;
 import com.hoquangnam45.pharmacy.service.MedicineService;
-import com.hoquangnam45.pharmacy.service.S3UploadService;
+import com.hoquangnam45.pharmacy.service.S3Service;
+import com.hoquangnam45.pharmacy.service.UploadSessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.websocket.server.PathParam;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MimeType;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,8 +34,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,12 +52,23 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasAuthority('ADMIN')")
 @Transactional
 public class MedicineAdminController {
+    public static final String MEDICINE_PREVIEW_SESSION_TYPE = "medicine_preview";
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".jpg", ".jpeg", ".webm", ".gif", ".png");
+    private static final String CREATED_AT = "CREATED_AT";
+    private static final String FILE_ID = "FILE_ID";
+    private static final UploadSessionConfig MEDICINE_PREVIEW_UPLOAD_SESSION_CONFIG = new UploadSessionConfig(15, Duration.of(15, ChronoUnit.MINUTES));
+    private static final int MAXIMUM_FILE_SIZE_IN_MB = 15;
+    private static final long MAXIMUM_FILE_SIZE_IN_BYTE = MAXIMUM_FILE_SIZE_IN_MB * 1024 * 1024;
+    private final Tika tika;
     private final MedicineService medicineService;
-    private final S3UploadService uploadService;
+    private final S3Service s3Service;
+    private final UploadSessionService uploadSessionService;
 
-    public MedicineAdminController(MedicineService medicineService, S3UploadService uploadService) {
+    public MedicineAdminController(Tika tika, MedicineService medicineService, S3Service s3Service, UploadSessionService uploadSessionService) {
+        this.tika = tika;
         this.medicineService = medicineService;
-        this.uploadService = uploadService;
+        this.s3Service = s3Service;
+        this.uploadSessionService = uploadSessionService;
     }
 
     @PostMapping
@@ -102,18 +129,66 @@ public class MedicineAdminController {
                 .collect(Collectors.toList())));
     }
 
-    @PostMapping("images")
-    public ResponseEntity<GenericResponse> createUploadSession() {
-        return uploadService.
+    @PostMapping("previews")
+    public ResponseEntity<UploadSessionCreateResponse> createUploadSession() {
+        UploadSession uploadSession = uploadSessionService.createUploadSession(MEDICINE_PREVIEW_SESSION_TYPE, MEDICINE_PREVIEW_UPLOAD_SESSION_CONFIG);
+        return ResponseEntity.ok().body(new UploadSessionCreateResponse(uploadSession.getSessionId(), uploadSession.getAllowedFileIds()));
     }
 
-    @PostMapping("images/{sessionId}")
-    public ResponseEntity<GenericResponse> addUploadPlaceholder() {
-
+    @PostMapping("previews/{sessionId}/{itemId}/upload")
+    public ResponseEntity<GenericResponse> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @PathVariable("sessionId") String sessionId,
+            @PathVariable("itemId") String fileId,
+            HttpServletRequest request) throws IOException, MimeTypeException {
+        if (uploadSessionService.hasSessionExpired(MEDICINE_PREVIEW_SESSION_TYPE, sessionId)) {
+            throw ApiError.notFound("Session either expired or not started yet");
+        } else if (uploadSessionService.allowItemId(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId)) {
+            throw ApiError.badRequest("Not allowed to upload using file id " + fileId);
+        } else if (MAXIMUM_FILE_SIZE_IN_BYTE < file.getSize()) {
+            throw ApiError.badRequest("Exceeded maximum file size");
+        } else {
+            String path = request.getServletPath();
+            String detectedMimeType = tika.detect(file.getInputStream());
+            MimeTypes allTypes = MimeTypes.getDefaultMimeTypes();
+            MimeType type = allTypes.forName(detectedMimeType);
+            String fileExtension = type.getExtension();
+            if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
+                throw ApiError.badRequest(MessageFormat.format("Not allowed uploaded file with detected mime type {0} and extension {1}", detectedMimeType, fileExtension));
+            } else {
+                String tempFolderUploadKey = uploadSessionService.getTempFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId);
+                s3Service.deleteFolder(tempFolderUploadKey);
+                String tempFileUploadKey = MessageFormat.format("{0}/{1}{2}", tempFolderUploadKey, fileId, fileExtension);
+                s3Service.uploadFile(file, tempFileUploadKey, Map.of(
+                        CREATED_AT, OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).toString(),
+                        FILE_ID, fileId)
+                );
+                uploadSessionService.renewSession(MEDICINE_PREVIEW_SESSION_TYPE, sessionId);
+                return ResponseEntity.ok(new GenericResponse(200, path, "Uploaded successfully", s3Service.getUrl(tempFileUploadKey)));
+            }
+        }
     }
 
-    @PostMapping("images/{sessionId}/{itemId}/upload")
-    public ResponseEntity<GenericResponse> uploadFile(@RequestParam("file") MultipartFile file) {
+    @PostMapping("previews/{sessionId}/renew")
+    public ResponseEntity<GenericResponse> renewSession(
+            @PathVariable("sessionId") String sessionId,
+            HttpServletRequest request) {
+        if (uploadSessionService.hasSessionExpired(MEDICINE_PREVIEW_SESSION_TYPE, sessionId)) {
+            throw ApiError.notFound("Session either expired or not started yet");
+        } else {
+            String path = request.getServletPath();
+            uploadSessionService.renewSession(MEDICINE_PREVIEW_SESSION_TYPE, sessionId);
+            return ResponseEntity.ok(new GenericResponse(200, path, "Renew session successfully"));
+        }
+    }
 
+    @DeleteMapping("previews/{sessionId}/{itemId}")
+    public ResponseEntity<GenericResponse> deleteUploadedFile(
+            @PathVariable("sessionId") String sessionId,
+            @PathVariable("itemId") String fileId,
+            HttpServletRequest request) {
+        String path = request.getServletPath();
+        s3Service.deleteFile(MEDICINE_PREVIEW_SESSION_TYPE, uploadSessionService.getTempFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId));
+        return ResponseEntity.ok().body(new GenericResponse(200, path, "Delete item successfully"));
     }
 }

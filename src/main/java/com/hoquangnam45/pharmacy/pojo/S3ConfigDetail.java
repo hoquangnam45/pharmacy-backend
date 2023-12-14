@@ -5,9 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class S3UploadConfigDetail {
+public class S3ConfigDetail {
     private String accessKey;
     private String secretKey;
-    private String rootBucketName;
+    private String defaultBucketName;
     private String region;
 }
