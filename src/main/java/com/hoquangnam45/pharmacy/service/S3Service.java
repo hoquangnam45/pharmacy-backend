@@ -81,15 +81,19 @@ public class S3Service {
         client.copyObject(bucketA, keyA, bucketB, keyB);
     }
 
-    public CopyObjectResult copyFileToFile(String bucket, String keyA, String keyB) {
-        return client.copyObject(bucket, keyA, bucket, keyB);
-    }
-
     public void copyContentOfFolderToFolder(String bucketA, String folderA, String bucketB, String folderB) {
         for (S3ObjectSummary file : client.listObjectsV2(bucketA, folderA).getObjectSummaries()) {
             Path relativePath = Path.of(file.getKey()).relativize(Path.of(folderA));
             copyFileToFile(bucketA, file.getKey(), bucketB, Path.of(folderB, relativePath.toString()).toString());
         }
+    }
+
+    public void copyContentOfFolderToFolder(String folderA, String folderB) {
+        copyContentOfFolderToFolder(defaultBucketName, folderA, defaultBucketName, folderB);
+    }
+
+    public void copyFolderToFolder(String folderA, String folderB) {
+        copyContentOfFolderToFolder(defaultBucketName, folderA, defaultBucketName, folderB + "/" + Path.of(folderA).getFileName());
     }
 
     public List<String> listFolderIn(String folder) {

@@ -41,8 +41,10 @@ public class MedicineService {
     private final MedicineListingRepo medicineListingRepo;
     private final MedicinePackagingRepo medicinePackagingRepo;
     private final OrderRepo orderRepo;
+    private final S3Service s3Service;
+    private final UploadSessionService uploadSessionService;
 
-    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo) {
+    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo, S3Service s3Service, UploadSessionService uploadSessionService) {
         this.medicineRepo = medicineRepo;
         this.producerRepo = producerRepo;
         this.medicineMapper = medicineMapper;
@@ -50,6 +52,8 @@ public class MedicineService {
         this.medicineListingRepo = medicineListingRepo;
         this.medicinePackagingRepo = medicinePackagingRepo;
         this.orderRepo = orderRepo;
+        this.s3Service = s3Service;
+        this.uploadSessionService = uploadSessionService;
     }
 
     public Medicine createMedicineDetail(MedicineDetailCreateRequest createRequest) {
@@ -60,6 +64,7 @@ public class MedicineService {
         List<String> notExistTags = createRequest.getTags().stream().filter(not(tagNames::contains)).toList();
         List<Tag> newTags = notExistTags.stream().map(tag -> Tag.builder().value(tag).build()).map(tagRepo::save).toList();
         tags.addAll(newTags);
+
         medicine.setProducer(producer);
         medicine.setTags(tags);
         medicine = medicineRepo.save(medicine);
