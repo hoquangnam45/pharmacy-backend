@@ -1,6 +1,8 @@
 package com.hoquangnam45.pharmacy.component.job;
 
-import com.hoquangnam45.pharmacy.controller.admin.MedicineAdminController;
+import com.hoquangnam45.pharmacy.entity.FileMetadata;
+import com.hoquangnam45.pharmacy.entity.UploadSession;
+import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;
 import com.hoquangnam45.pharmacy.service.S3Service;
 import com.hoquangnam45.pharmacy.service.UploadSessionService;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,12 +20,9 @@ public class CleanupUploadSessionFileJob {
 
     // Run every 15 minutes
     @Scheduled(cron = "*/15 * * * *")
-    public void cleanupTempMedicinePreviewUploadSessionFile() {
-        s3Service.listFolderIn(uploadSessionService.getTempTypeUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE))
-                .stream()
-                .map(commonPrefix -> commonPrefix.split("/"))
-                .map(tokens -> tokens[tokens.length - 1])
-                .filter(sessionFolderName -> uploadSessionService.hasSessionExpired(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, sessionFolderName))
-                .forEach(sessionFolderName -> s3Service.deleteFolder(uploadSessionService.getTempSessionUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, sessionFolderName)));
+    public void cleanupExpiredUploadSession() {
+        for (UploadSession expiredSession : uploadSessionService.getAllExpiredUploadSession()) {
+            uploadSessionService.deleteSession(expiredSession);
+        }
     }
 }

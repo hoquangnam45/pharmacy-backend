@@ -7,6 +7,8 @@ spring:
   jpa:
     showSql: true
     properties:
+      jdbc:
+        timeZone: UTC
       hibernate:
         formatSql: true
     hibernate:

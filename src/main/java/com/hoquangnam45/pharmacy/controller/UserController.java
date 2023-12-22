@@ -1,14 +1,12 @@
 package com.hoquangnam45.pharmacy.controller;
 
-import com.hoquangnam45.pharmacy.pojo.ApiError;
+import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.UserProfile;
 import com.hoquangnam45.pharmacy.service.UserService;
-import jakarta.websocket.server.PathParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;

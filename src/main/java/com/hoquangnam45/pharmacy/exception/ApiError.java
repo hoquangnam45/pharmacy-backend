@@ -1,9 +1,7 @@
-package com.hoquangnam45.pharmacy.pojo;
+package com.hoquangnam45.pharmacy.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
-
-import java.time.OffsetDateTime;
 
 @Getter
 public class ApiError extends RuntimeException {

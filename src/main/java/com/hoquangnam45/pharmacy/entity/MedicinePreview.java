@@ -3,6 +3,7 @@ package com.hoquangnam45.pharmacy.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,10 +20,9 @@ import java.time.OffsetDateTime;
 @Setter
 @Table(name = "medicine_preview")
 public class MedicinePreview {
+    @OneToOne
     @JoinColumn(name = "file_metadata_id", referencedColumnName = "id")
     private FileMetadata fileMetadata;
-    private OffsetDateTime createdAt;
-
     @ManyToOne
     @JoinColumn(name = "medicine_id", referencedColumnName = "id")
     private Medicine medicine;

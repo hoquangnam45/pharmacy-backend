@@ -19,6 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,7 +48,7 @@ public class JwtService {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         OffsetDateTime accessTokenExpiredAt = now.plus(jwtConfig.getAccessTokenExpirationInMin());
         OffsetDateTime refreshTokenExpiredAt = now.plus(jwtConfig.getRefreshTokenExpirationInMin());
         PrincipalSupplier principalSupplier = (PrincipalSupplier) authentication.getPrincipal();

@@ -47,8 +47,6 @@ public class Order {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    @CreationTimestamp
     private OffsetDateTime createdAt;
-    @UpdateTimestamp
     private OffsetDateTime updatedAt;
 }

@@ -11,5 +11,6 @@ import java.util.UUID;
 @Repository
 public interface MedicineListingRepo extends JpaRepository<MedicineListing, UUID> {
     void deleteByPackaging_Id(UUID id);
+    void deleteAllByPackaging_Medicine_Id(UUID id);
     Optional<MedicineListing> findByIdAndDisableFalse(UUID id);
 }

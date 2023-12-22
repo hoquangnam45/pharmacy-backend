@@ -1,29 +1,40 @@
 package com.hoquangnam45.pharmacy.service;
 
 import com.hoquangnam45.pharmacy.component.MedicineMapper;
+import com.hoquangnam45.pharmacy.controller.admin.MedicineAdminController;
+import com.hoquangnam45.pharmacy.entity.FileMetadata;
 import com.hoquangnam45.pharmacy.entity.Medicine;
 import com.hoquangnam45.pharmacy.entity.MedicineListing;
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
+import com.hoquangnam45.pharmacy.entity.MedicinePreview;
 import com.hoquangnam45.pharmacy.entity.Producer;
 import com.hoquangnam45.pharmacy.entity.Tag;
+import com.hoquangnam45.pharmacy.entity.UploadSession;
+import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;
+import com.hoquangnam45.pharmacy.exception.UploadSessionInvalidException;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicineListingCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicinePackagingRequest;
 import com.hoquangnam45.pharmacy.pojo.PartialPage;
 import com.hoquangnam45.pharmacy.pojo.ProducerCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.UpdateListingRequest;
+import com.hoquangnam45.pharmacy.repo.FileMetadataRepo;
 import com.hoquangnam45.pharmacy.repo.MedicineListingRepo;
 import com.hoquangnam45.pharmacy.repo.MedicinePackagingRepo;
+import com.hoquangnam45.pharmacy.repo.MedicinePreviewRepo;
 import com.hoquangnam45.pharmacy.repo.MedicineRepo;
 import com.hoquangnam45.pharmacy.repo.OrderRepo;
 import com.hoquangnam45.pharmacy.repo.ProducerRepo;
 import com.hoquangnam45.pharmacy.repo.TagRepo;
+import com.hoquangnam45.pharmacy.repo.UploadSessionFileMetadataRepo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -43,8 +54,11 @@ public class MedicineService {
     private final OrderRepo orderRepo;
     private final S3Service s3Service;
     private final UploadSessionService uploadSessionService;
+    private final UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo;
+    private final FileMetadataRepo fileMetadataRepo;
+    private final MedicinePreviewRepo medicinePreviewRepo;
 
-    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo, S3Service s3Service, UploadSessionService uploadSessionService) {
+    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo, S3Service s3Service, UploadSessionService uploadSessionService, UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo, FileMetadataRepo fileMetadataRepo, MedicinePreviewRepo medicinePreviewRepo) {
         this.medicineRepo = medicineRepo;
         this.producerRepo = producerRepo;
         this.medicineMapper = medicineMapper;
@@ -54,6 +68,9 @@ public class MedicineService {
         this.orderRepo = orderRepo;
         this.s3Service = s3Service;
         this.uploadSessionService = uploadSessionService;
+        this.uploadSessionFileMetadataRepo = uploadSessionFileMetadataRepo;
+        this.fileMetadataRepo = fileMetadataRepo;
+        this.medicinePreviewRepo = medicinePreviewRepo;
     }
 
     public Medicine createMedicineDetail(MedicineDetailCreateRequest createRequest) {
@@ -64,12 +81,59 @@ public class MedicineService {
         List<String> notExistTags = createRequest.getTags().stream().filter(not(tagNames::contains)).toList();
         List<Tag> newTags = notExistTags.stream().map(tag -> Tag.builder().value(tag).build()).map(tagRepo::save).toList();
         tags.addAll(newTags);
-
         medicine.setProducer(producer);
         medicine.setTags(tags);
         medicine = medicineRepo.save(medicine);
         medicine.setAllowPackagingUnits(createPackaging(medicine, createRequest.getAllowPackagingUnits()));
-        return medicine;
+
+        // Copy all product preview files to a different location and stored the metadata to db
+        UploadSession uploadSession = uploadSessionService.getUploadSession(createRequest.getUploadSessionId());
+        if (uploadSession == null) {
+            throw new UploadSessionInvalidException("Upload session not exists");
+        }
+        if (createRequest.getMainPreviewId() == null) {
+            throw new UploadSessionInvalidException("Main preview id is missing");
+        }
+        UploadSessionFileMetadata mainPreviewMetadata = uploadSessionFileMetadataRepo.findByUploadSession_IdAndId(uploadSession.getId(), createRequest.getMainPreviewId());
+        if (mainPreviewMetadata == null || mainPreviewMetadata.getFileMetadata() != null) {
+            throw new UploadSessionInvalidException("Main preview file not found in session");
+        }
+        String tempUploadSessionFolder = uploadSessionService.getTempSessionUploadFolder(uploadSession.getType(), uploadSession.getId().toString());
+        String medicinePreviewFolder = uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, medicine.getId().toString());
+        s3Service.copyContentOfFolderToFolder(tempUploadSessionFolder, medicinePreviewFolder);
+        Medicine finalMedicine = medicine;
+        Map<UUID, UUID> uploadSessionFileToFileMetadata = uploadSessionFileMetadataRepo.findAllByUploadSession_Id(uploadSession.getId()).stream()
+                .collect(Collectors.toMap(
+                        UploadSessionFileMetadata::getId,
+                        UploadSessionFileMetadata::getFileMetadataId
+                ));
+        Map<UUID, MedicinePreview> tempFileMetadataToPreviews = fileMetadataRepo.findAllByUploadSessionFileMetadata_UploadSession_Id(uploadSession.getId()).stream()
+                .collect(Collectors.toMap(
+                        FileMetadata::getId,
+                        fileMetadata -> {
+                            String relativePath = Path.of(fileMetadata.getPath()).relativize(Path.of(tempUploadSessionFolder)).toString();
+                            String newPath = Path.of(medicinePreviewFolder, relativePath).toString();
+                            FileMetadata finalMetadata = new FileMetadata();
+                            finalMetadata.setName(fileMetadata.getName());
+                            finalMetadata.setExtension(fileMetadata.getExtension());
+                            finalMetadata.setContentType(fileMetadata.getContentType());
+                            finalMetadata.setCreatedAt(fileMetadata.getCreatedAt());
+                            finalMetadata.setPath(newPath);
+                            finalMetadata = fileMetadataRepo.save(finalMetadata);
+                            MedicinePreview preview = new MedicinePreview();
+                            preview.setMedicine(finalMedicine);
+                            preview.setFileMetadata(finalMetadata);
+                            return preview;
+                        }
+                ));
+        medicine.setMainPreview(tempFileMetadataToPreviews.get(uploadSessionFileToFileMetadata.get(createRequest.getMainPreviewId())));
+        tempFileMetadataToPreviews.values().forEach(medicinePreviewRepo::save);
+        finalMedicine.setPreviews(new HashSet<>(tempFileMetadataToPreviews.values()));
+
+        // Clean-up upload session
+        uploadSessionService.deleteSession(uploadSession);
+        
+        return finalMedicine;
     }
 
     public List<MedicinePackaging> createPackaging(Medicine medicine, List<MedicinePackagingRequest> requests) {
@@ -128,9 +192,19 @@ public class MedicineService {
         if (medicine == null) {
             return;
         }
-        List<MedicinePackaging> medicinePackagings = medicine.getAllowPackagingUnits();
-        medicinePackagings.stream().map(MedicinePackaging::getId).forEach(medicineListingRepo::deleteByPackaging_Id);
-        medicinePackagings.forEach(medicinePackagingRepo::delete);
+        // delete listing
+        medicineListingRepo.deleteAllByPackaging_Medicine_Id(id);
+
+        // delete packaging
+        medicinePackagingRepo.deleteAllByMedicine_Id(medicine.getId());
+
+        // delete uploaded file
+        s3Service.deleteFolder(uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, id.toString()));
+        List<FileMetadata> toBeDeletedFileMetadatas = fileMetadataRepo.findAllByMedicinePreview_Medicine_Id(medicine.getId());
+        medicinePreviewRepo.deleteAllByMedicine_Id(medicine.getId());
+        toBeDeletedFileMetadatas.forEach(fileMetadataRepo::delete);
+
+        // delete medicine
         medicineRepo.deleteById(id);
     }
 

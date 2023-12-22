@@ -1,15 +1,15 @@
 package com.hoquangnam45.pharmacy.controller.admin;
 
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
-import com.hoquangnam45.pharmacy.pojo.ApiError;
+import com.hoquangnam45.pharmacy.entity.UploadSession;
+import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;
+import com.hoquangnam45.pharmacy.exception.ApiError;
+import com.hoquangnam45.pharmacy.pojo.GenericResponse;
+import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicineListingCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicinePackagingRequest;
 import com.hoquangnam45.pharmacy.pojo.ProducerCreateRequest;
-import com.hoquangnam45.pharmacy.pojo.GenericResponse;
-import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.UpdateListingRequest;
-import com.hoquangnam45.pharmacy.pojo.UploadSession;
-import com.hoquangnam45.pharmacy.pojo.UploadSessionConfig;
 import com.hoquangnam45.pharmacy.pojo.UploadSessionCreateResponse;
 import com.hoquangnam45.pharmacy.service.MedicineService;
 import com.hoquangnam45.pharmacy.service.S3Service;
@@ -36,12 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -54,9 +49,6 @@ import java.util.stream.Collectors;
 public class MedicineAdminController {
     public static final String MEDICINE_PREVIEW_SESSION_TYPE = "medicine_preview";
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".jpg", ".jpeg", ".webm", ".gif", ".png");
-    private static final String CREATED_AT = "CREATED_AT";
-    private static final String FILE_ID = "FILE_ID";
-    private static final UploadSessionConfig MEDICINE_PREVIEW_UPLOAD_SESSION_CONFIG = new UploadSessionConfig(15, Duration.of(15, ChronoUnit.MINUTES));
     private static final int MAXIMUM_FILE_SIZE_IN_MB = 15;
     private static final long MAXIMUM_FILE_SIZE_IN_BYTE = MAXIMUM_FILE_SIZE_IN_MB * 1024 * 1024;
     private final Tika tika;
@@ -129,21 +121,26 @@ public class MedicineAdminController {
                 .collect(Collectors.toList())));
     }
 
-    @PostMapping("previews")
+    @PostMapping("upload")
     public ResponseEntity<UploadSessionCreateResponse> createUploadSession() {
-        UploadSession uploadSession = uploadSessionService.createUploadSession(MEDICINE_PREVIEW_SESSION_TYPE, MEDICINE_PREVIEW_UPLOAD_SESSION_CONFIG);
-        return ResponseEntity.ok().body(new UploadSessionCreateResponse(uploadSession.getSessionId(), uploadSession.getAllowedFileIds()));
+        UploadSession uploadSession = uploadSessionService.createUploadSession(MEDICINE_PREVIEW_SESSION_TYPE);
+        return ResponseEntity.ok().body(new UploadSessionCreateResponse(
+                uploadSession.getId(),
+                uploadSession.getType(),
+                uploadSession.getUploadSessionFileMetadatas().stream()
+                        .map(UploadSessionFileMetadata::getId)
+                        .collect(Collectors.toSet())));
     }
 
-    @PostMapping("previews/{sessionId}/{itemId}/upload")
+    @PostMapping("upload/{sessionId}/{itemId}")
     public ResponseEntity<GenericResponse> uploadFile(
             @RequestParam("file") MultipartFile file,
-            @PathVariable("sessionId") String sessionId,
-            @PathVariable("itemId") String fileId,
+            @PathVariable("sessionId") UUID sessionId,
+            @PathVariable("itemId") UUID fileId,
             HttpServletRequest request) throws IOException, MimeTypeException {
-        if (uploadSessionService.hasSessionExpired(MEDICINE_PREVIEW_SESSION_TYPE, sessionId)) {
+        if (uploadSessionService.hasSessionExpired(sessionId)) {
             throw ApiError.notFound("Session either expired or not started yet");
-        } else if (uploadSessionService.allowItemId(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId)) {
+        } else if (uploadSessionService.allowItemId(sessionId, fileId)) {
             throw ApiError.badRequest("Not allowed to upload using file id " + fileId);
         } else if (MAXIMUM_FILE_SIZE_IN_BYTE < file.getSize()) {
             throw ApiError.badRequest("Exceeded maximum file size");
@@ -156,24 +153,32 @@ public class MedicineAdminController {
             if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
                 throw ApiError.badRequest(MessageFormat.format("Not allowed uploaded file with detected mime type {0} and extension {1}", detectedMimeType, fileExtension));
             } else {
-                String tempFolderUploadKey = uploadSessionService.getTempFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId);
-                s3Service.deleteFolder(tempFolderUploadKey);
-                String tempFileUploadKey = MessageFormat.format("{0}/{1}{2}", tempFolderUploadKey, fileId, fileExtension);
-                s3Service.uploadFile(file, tempFileUploadKey, Map.of(
-                        CREATED_AT, OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).toString(),
-                        FILE_ID, fileId)
-                );
+                String fileName = fileId + fileExtension;
+                String tempFolderUploadKey = uploadSessionService.getTempSessionFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId.toString(), fileId.toString());
+                String tempFileUploadKey = MessageFormat.format("{0}/{1}", tempFolderUploadKey, fileName);
+                s3Service.uploadFile(file, tempFileUploadKey);
+                uploadSessionService.storeTempFileMetadata(
+                        sessionId,
+                        fileId,
+                        fileName,
+                        fileExtension,
+                        detectedMimeType,
+                        tempFileUploadKey);
                 uploadSessionService.renewSession(MEDICINE_PREVIEW_SESSION_TYPE, sessionId);
                 return ResponseEntity.ok(new GenericResponse(200, path, "Uploaded successfully", s3Service.getUrl(tempFileUploadKey)));
             }
         }
     }
 
-    @PostMapping("previews/{sessionId}/renew")
+    // Upload session has a fixed time-out, after that time-out expired the temporary session folder is free to
+    // be deleted by a scheduled job, to prevent the session folder from being deleted while the session is still active
+    // fe client will need to periodically call to this api (kind of like heartbeat) to reset the timeout
+    // clock and let the backend know that the session is still active
+    @PostMapping("upload/{sessionId}/renew")
     public ResponseEntity<GenericResponse> renewSession(
-            @PathVariable("sessionId") String sessionId,
+            @PathVariable("sessionId") UUID sessionId,
             HttpServletRequest request) {
-        if (uploadSessionService.hasSessionExpired(MEDICINE_PREVIEW_SESSION_TYPE, sessionId)) {
+        if (uploadSessionService.hasSessionExpired(sessionId)) {
             throw ApiError.notFound("Session either expired or not started yet");
         } else {
             String path = request.getServletPath();
@@ -182,13 +187,13 @@ public class MedicineAdminController {
         }
     }
 
-    @DeleteMapping("previews/{sessionId}/{itemId}")
+    @DeleteMapping("upload/{sessionId}/{itemId}")
     public ResponseEntity<GenericResponse> deleteUploadedFile(
             @PathVariable("sessionId") String sessionId,
             @PathVariable("itemId") String fileId,
             HttpServletRequest request) {
         String path = request.getServletPath();
-        s3Service.deleteFile(MEDICINE_PREVIEW_SESSION_TYPE, uploadSessionService.getTempFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId));
+        s3Service.deleteFile(MEDICINE_PREVIEW_SESSION_TYPE, uploadSessionService.getTempSessionFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId));
         return ResponseEntity.ok().body(new GenericResponse(200, path, "Delete item successfully"));
     }
 }

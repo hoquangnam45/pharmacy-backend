@@ -1,6 +1,7 @@
 package com.hoquangnam45.pharmacy.controller;
 
-import com.hoquangnam45.pharmacy.pojo.ApiError;
+import com.hoquangnam45.pharmacy.exception.ApiError;
+import com.hoquangnam45.pharmacy.exception.UploadSessionInvalidException;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,6 +24,12 @@ public class ControllerErrorHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<GenericResponse> handleAccessDenied(AccessDeniedException err, WebRequest webRequest) {
         String path = ((ServletWebRequest) webRequest).getRequest().getServletPath();
         return ResponseEntity.status(403).body(new GenericResponse(403, path, err.getMessage(), null));
+    }
+
+    @ExceptionHandler(UploadSessionInvalidException.class)
+    public ResponseEntity<GenericResponse> handleUploadSessionInvalid(UploadSessionInvalidException err, WebRequest webRequest) {
+        String path = ((ServletWebRequest) webRequest).getRequest().getServletPath();
+        return ResponseEntity.status(400).body(new GenericResponse(400, path, err.getMessage()));
     }
 
     @ExceptionHandler(Throwable.class)

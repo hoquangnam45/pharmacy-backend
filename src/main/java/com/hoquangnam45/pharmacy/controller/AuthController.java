@@ -2,7 +2,7 @@ package com.hoquangnam45.pharmacy.controller;
 
 import com.hoquangnam45.pharmacy.entity.RefreshToken;
 import com.hoquangnam45.pharmacy.entity.User;
-import com.hoquangnam45.pharmacy.pojo.ApiError;
+import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.CustomAuthentication;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.pojo.JwtToken;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
-import java.util.Optional;
+import java.time.ZoneOffset;
 
 @RestController
 @RequestMapping("auth")
@@ -93,7 +93,7 @@ public class AuthController {
         if (refreshToken == null) {
             throw ApiError.notFound("Stored refresh token associate with your access token is not found");
         }
-        if (OffsetDateTime.now().isAfter(refreshToken.getExpiredAt())) {
+        if (OffsetDateTime.now(ZoneOffset.UTC).isAfter(refreshToken.getExpiredAt())) {
             jwtService.invalidateRefreshTokenByAccessToken(accessToken);
             throw ApiError.forbidden("Stored refresh token associated with your access token has been expired");
         }
