@@ -155,6 +155,7 @@ create table delivery_info(
     zip_code varchar(255) not null,
     country_code varchar(255) not null,
     phone_number varchar(255) not null,
+    recipient_name varchar(255),
     user_id uuid not null,
     constraint fk_delivery_info_user_id foreign key(user_id) references user_info(id)
 );
@@ -169,6 +170,7 @@ create table delivery_info_audit(
     zip_code varchar(255) not null,
     country_code varchar(255) not null,
     phone_number varchar(255) not null,
+    recipient_name varchar(255),
     user_id uuid not null,
     audit_object_id varchar(255) not null,
     created_at timestamp not null,

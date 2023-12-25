@@ -30,6 +30,8 @@ public class DeliveryInfoAudit {
     private String address;
     private String zipCode;
 
+    // Why separate phone numbers here. because the phone numbers from db is for used with identify user
+    // if linked  to the
     private String countryCode;
     private String phoneNumber;
 
