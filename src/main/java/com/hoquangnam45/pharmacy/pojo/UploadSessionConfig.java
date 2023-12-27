@@ -1,13 +1,20 @@
 package com.hoquangnam45.pharmacy.pojo;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.time.Duration;
 
-@RequiredArgsConstructor
 @Getter
+@Setter
+@AllArgsConstructor
 public class UploadSessionConfig {
-    private final int maximumFileCount;
-    private final Duration expiredDuration;
+    private String type;
+    private int maximumFileCount;
+    private int expiredDurationInMin;
+
+    public Duration getExpiredDurationInMin() {
+        return Duration.ofMinutes(expiredDurationInMin);
+    }
 }

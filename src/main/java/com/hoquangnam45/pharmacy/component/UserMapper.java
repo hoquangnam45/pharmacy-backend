@@ -8,6 +8,13 @@ import org.mapstruct.Mapping;
 
 @Mapper
 public interface UserMapper {
+    @Mapping(target = "placedOrders", ignore = true)
+    @Mapping(target = "middleName", ignore = true)
+    @Mapping(target = "lastName", ignore = true)
+    @Mapping(target = "gender", ignore = true)
+    @Mapping(target = "firstName", ignore = true)
+    @Mapping(target = "birthDate", ignore = true)
+    @Mapping(target = "auditDeliveryAddresses", ignore = true)
     @Mapping(target = "deliveryAddresses", ignore = true)
     @Mapping(target = "refreshTokens", ignore = true)
     @Mapping(target = "permissions", ignore = true)

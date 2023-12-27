@@ -20,15 +20,4 @@ public class AppConfig {
     public Tika tika() {
         return new Tika();
     }
-
-    @Bean
-    public UploadSessionService uploadSessionService(
-            UploadSessionRepo uploadSessionRepo,
-            FileMetadataRepo fileMetadataRepo,
-            S3Service s3Service,
-            UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo) {
-        UploadSessionService uploadSessionService = new UploadSessionService(uploadSessionRepo, fileMetadataRepo, s3Service, uploadSessionFileMetadataRepo);
-        uploadSessionService.registerUploadSessionConfig(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, new UploadSessionConfig(15, Duration.of(15, ChronoUnit.MINUTES)));
-        return uploadSessionService;
-    }
 }

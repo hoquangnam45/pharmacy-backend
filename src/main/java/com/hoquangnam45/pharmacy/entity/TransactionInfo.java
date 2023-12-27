@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -26,6 +27,9 @@ public class TransactionInfo {
     @OneToOne
     @JoinColumn(name = "order_id", referencedColumnName = "id")
     private Order order;
+
+    private BigDecimal amount;
+
     private TransactionStatus status;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

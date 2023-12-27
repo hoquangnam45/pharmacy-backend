@@ -1,8 +1,39 @@
+-- Basic table
 create table phone_number(
     id uuid not null primary key default gen_random_uuid(),
     country_code varchar(255) not null,
     phone_number varchar(255) not null,
     constraint unique_phone_number_code_phone_number unique(country_code, phone_number)
+);
+
+create table file_metadata(
+    id uuid not null primary key default gen_random_uuid(),
+    name varchar(255) not null,
+    content_type varchar(255) not null,
+    extension varchar(255) not null,
+    path varchar(255) not null,
+    created_at timestamp not null
+);
+
+create table upload_session(
+    id uuid not null primary key default gen_random_uuid(),
+    type varchar(255) not null,
+    created_at timestamp not null,
+    expired_at timestamp not null
+);
+
+create table tag(
+    id uuid not null primary key default gen_random_uuid(),
+    value varchar(255) not null unique
+);
+
+--
+create table upload_session_file_metadata(
+    id uuid not null primary key default gen_random_uuid(),
+    file_metadata_id uuid not null unique,
+    upload_session_id uuid not null,
+    constraint fk_upload_session_file_metadata_file_metadata_id foreign key file_metadata_id references file_metadata(id),
+    constraint fk_upload_session_file_metadata_upload_session_id foreign key upload_session_id references upload_session(id)
 );
 
 create table user_info(
@@ -27,11 +58,6 @@ create table user_permission_x(
     user_id uuid not null,
     constraint fk_user_permission_x_user_id foreign key(user_id) references user_info(id),
     constraint unique_user_permission_x_user_role unique(user_id, role)
-);
-
-create table tag(
-    id uuid not null primary key default gen_random_uuid(),
-    value varchar(255) not null unique
 );
 
 create table refresh_token(
@@ -77,7 +103,7 @@ create table medicine_audit(
     id uuid not null primary key default gen_random_uuid(),
     name varchar(255) not null,
     description varchar(255) not null,
-    image_path varchar(255),
+    main_preview_id varchar(255),
     basic_unit varchar(255) not null,
     side_effect varchar(255) not null,
     usage_type varchar(255) not null,
@@ -87,6 +113,18 @@ create table medicine_audit(
     active boolean not null default false,
     constraint unique_medicine_audit_name_producer unique(name, producer_id),
     constraint fk_medicine_audit_producer_id foreign key(producer_id) references producer_audit(id)
+);
+
+create table medicine_preview(
+    id uuid not null primary key default gen_random_uuid(),
+    medicine_id uuid not null,
+
+);
+
+create table medicine_preview_audit(
+    id uuid not null primary key default gen_random_uuid(),
+    medicine_id uuid not null,
+
 );
 
 create table medicine_tag_x(
@@ -153,11 +191,11 @@ create table delivery_info(
     sub_district varchar(255) not null,
     address varchar(255) not null,
     zip_code varchar(255) not null,
-    country_code varchar(255) not null,
-    phone_number varchar(255) not null,
+    phone_number_id uuid not null,
     recipient_name varchar(255),
     user_id uuid not null,
-    constraint fk_delivery_info_user_id foreign key(user_id) references user_info(id)
+    constraint fk_delivery_info_user_id foreign key(user_id) references user_info(id),
+    constraint fk_delivery_info_phone_number_id foreign key(phone_number_id) references phone_number(id)
 );
 
 create table delivery_info_audit(
@@ -168,14 +206,14 @@ create table delivery_info_audit(
     sub_district varchar(255) not null,
     address varchar(255) not null,
     zip_code varchar(255) not null,
-    country_code varchar(255) not null,
-    phone_number varchar(255) not null,
+    phone_number_id uuid not null,
     recipient_name varchar(255),
     user_id uuid not null,
     audit_object_id varchar(255) not null,
     created_at timestamp not null,
     active boolean not null default false,
-    constraint fk_delivery_info_audit_user_id foreign key(user_id) references user_info(id)
+    constraint fk_delivery_info_audit_user_id foreign key(user_id) references user_info(id),
+    constraint fk_delivery_info_audit_phone_number_id foreign key(phone_number_id) references phone_number(id)
 );
 
 create table order_info(
@@ -195,6 +233,7 @@ create table order_info(
 create table transaction_info(
 	id uuid not null primary key default gen_random_uuid(),
     order_id uuid unique not null,
+    amount decimal not null,
     status varchar(255) not null,
     created_at timestamp not null,
     updated_at timestamp,

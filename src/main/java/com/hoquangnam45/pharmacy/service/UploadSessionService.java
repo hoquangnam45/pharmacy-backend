@@ -1,5 +1,6 @@
 package com.hoquangnam45.pharmacy.service;
 
+import com.hoquangnam45.pharmacy.config.UploadConfig;
 import com.hoquangnam45.pharmacy.entity.FileMetadata;
 import com.hoquangnam45.pharmacy.entity.UploadSession;
 import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +24,21 @@ import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 public class UploadSessionService {
-    private final Map<String, UploadSessionConfig> uploadSessionConfigs = new HashMap<>();
+    private final Map<String, UploadSessionConfig> uploadSessionConfigs;
     private final UploadSessionRepo uploadSessionRepo;
     private final FileMetadataRepo fileMetadataRepo;
     private final S3Service s3Service;
     private final UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo;
 
-    public void registerUploadSessionConfig(String type, UploadSessionConfig sessionConfig) {
-        uploadSessionConfigs.putIfAbsent(type, sessionConfig);
+    public UploadSessionService(UploadConfig uploadConfig, UploadSessionRepo uploadSessionRepo, FileMetadataRepo fileMetadataRepo, S3Service s3Service, UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo) {
+        this.uploadSessionRepo = uploadSessionRepo;
+        this.fileMetadataRepo = fileMetadataRepo;
+        this.s3Service = s3Service;
+        this.uploadSessionFileMetadataRepo = uploadSessionFileMetadataRepo;
+        this.uploadSessionConfigs = uploadConfig.getSessions().stream().collect(Collectors.toMap(
+                UploadSessionConfig::getType,
+                sessionConfig -> sessionConfig
+        ));
     }
 
     private UploadSessionConfig getUploadSessionConfig(String type) {
@@ -42,7 +49,7 @@ public class UploadSessionService {
     public UploadSession createUploadSession(String type) {
         UploadSessionConfig config = getUploadSessionConfig(type);
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        OffsetDateTime expiredAt = now.plus(config.getExpiredDuration());
+        OffsetDateTime expiredAt = now.plus(config.getExpiredDurationInMin());
         UploadSession session = new UploadSession();
         session.setType(type);
         session.setCreatedAt(now);
@@ -61,7 +68,7 @@ public class UploadSessionService {
         UploadSessionConfig config = getUploadSessionConfig(type);
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         UploadSession currentSession = uploadSessionRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Not possible to enter here"));
-        currentSession.setExpiredAt(now.plus(config.getExpiredDuration()));
+        currentSession.setExpiredAt(now.plus(config.getExpiredDurationInMin()));
     }
 
     public boolean hasSessionExpired(UUID sessionId) {
@@ -91,7 +98,7 @@ public class UploadSessionService {
         return MessageFormat.format("{0}/{1}", type, sessionId);
     }
 
-    public FileMetadata storeTempFileMetadata(UUID sessionId, UUID uploadSessionFileMetadataId, String fileName, String extension, String contentType, String filePath) {
+    public void storeTempFileMetadata(UUID sessionId, UUID uploadSessionFileMetadataId, String fileName, String extension, String contentType, String filePath) {
         // Delete previous file
         UploadSessionFileMetadata uploadSessionFileMetadata = uploadSessionFileMetadataRepo.findByUploadSession_IdAndId(sessionId, uploadSessionFileMetadataId);
         if (uploadSessionFileMetadata == null) {
@@ -110,7 +117,7 @@ public class UploadSessionService {
         metadata.setContentType(contentType);
         metadata.setUploadSessionFileMetadata(uploadSessionFileMetadata);
         metadata.setExtension(extension);
-        return fileMetadataRepo.save(metadata);
+        fileMetadataRepo.save(metadata);
     }
 
     public UploadSession getUploadSession(UUID id) {

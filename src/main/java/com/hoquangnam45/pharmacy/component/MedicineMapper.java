@@ -13,6 +13,8 @@ import org.mapstruct.Mapping;
 
 @Mapper
 public interface MedicineMapper {
+    @Mapping(target = "previews", ignore = true)
+    @Mapping(target = "mainPreview", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "producer", ignore = true)
     @Mapping(target = "tags", ignore = true)

@@ -33,7 +33,7 @@ public class Medicine {
     private String description;
 
     @OneToOne
-    @JoinColumn(name = "preview_id", referencedColumnName = "id")
+    @JoinColumn(name = "main_preview_id", referencedColumnName = "id")
     private MedicinePreview mainPreview;
 
     @ManyToMany
@@ -46,12 +46,15 @@ public class Medicine {
 
     @Enumerated(EnumType.STRING)
     private PackagingUnit basicUnit;
+
     @OneToMany(mappedBy = "medicine")
     private List<MedicinePackaging> allowPackagingUnits;
+
     private String sideEffect;
 
     @Enumerated(EnumType.STRING)
     private UsageType usageType;
+
     @ManyToOne
     @JoinColumn(name = "producer_id", referencedColumnName = "id")
     private Producer producer;
