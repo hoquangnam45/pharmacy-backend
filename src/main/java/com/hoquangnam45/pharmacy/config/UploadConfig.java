@@ -1,8 +1,6 @@
 package com.hoquangnam45.pharmacy.config;
 
-import com.hoquangnam45.pharmacy.constant.UploadHandlerType;
 import com.hoquangnam45.pharmacy.pojo.S3ConfigDetail;
-import com.hoquangnam45.pharmacy.pojo.UploadConfigDetailProperty;
 import com.hoquangnam45.pharmacy.pojo.UploadSessionConfig;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,4 +16,5 @@ import java.util.List;
 public class UploadConfig {
     private S3ConfigDetail s3;
     private List<UploadSessionConfig> sessions;
+    private boolean local;
 }

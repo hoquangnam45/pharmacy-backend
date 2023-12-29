@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -32,7 +33,7 @@ public class MedicineAudit {
     private UUID id;
     private String name;
     private String description;
-    private String imagePath;
+
     @ManyToMany
     @JoinTable(
             name = "medicine_tag_audit_x",
@@ -46,6 +47,7 @@ public class MedicineAudit {
 
     @OneToMany(mappedBy = "medicine")
     private List<MedicinePackagingAudit> allowPackagingUnits;
+
     private String sideEffect;
 
     @Enumerated(EnumType.STRING)
@@ -54,6 +56,9 @@ public class MedicineAudit {
     @ManyToOne
     @JoinColumn(name = "producer_id", referencedColumnName = "id")
     private ProducerAudit producer;
+
+    @OneToMany(mappedBy = "medicine")
+    private Set<MedicinePreviewAudit> previews;
 
     @Embedded
     private AuditInfo auditInfo;

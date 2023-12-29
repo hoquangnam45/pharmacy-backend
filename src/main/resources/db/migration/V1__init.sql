@@ -28,12 +28,13 @@ create table tag(
 );
 
 --
+
 create table upload_session_file_metadata(
     id uuid not null primary key default gen_random_uuid(),
     file_metadata_id uuid not null unique,
     upload_session_id uuid not null,
-    constraint fk_upload_session_file_metadata_file_metadata_id foreign key file_metadata_id references file_metadata(id),
-    constraint fk_upload_session_file_metadata_upload_session_id foreign key upload_session_id references upload_session(id)
+    constraint fk_upload_session_file_metadata_file_metadata_id foreign key(file_metadata_id) references file_metadata(id),
+    constraint fk_upload_session_file_metadata_upload_session_id foreign key(upload_session_id) references upload_session(id)
 );
 
 create table user_info(
@@ -118,13 +119,19 @@ create table medicine_audit(
 create table medicine_preview(
     id uuid not null primary key default gen_random_uuid(),
     medicine_id uuid not null,
-
+    file_metadata_id uuid not null,
+    main_preview boolean default false,
+    constraint fk_medicine_preview_file_metadata_id foreign key(file_metadata_id) references file_metadata(id),
+    constraint fk_medicine_preview_medicine_id foreign key(medicine_id) references medicine(id)
 );
 
 create table medicine_preview_audit(
     id uuid not null primary key default gen_random_uuid(),
     medicine_id uuid not null,
-
+    file_metadata_id uuid not null,
+    main_preview boolean not null,
+    constraint fk_medicine_preview_file_metadata_id foreign key(file_metadata_id) references file_metadata(id),
+    constraint fk_medicine_preview_medicine_id foreign key(medicine_id) references medicine_audit(id)
 );
 
 create table medicine_tag_x(

@@ -12,7 +12,7 @@ spring:
       hibernate:
         formatSql: true
     hibernate:
-      ddlAuto: none
+      ddlAuto: validate
 pharma:
   jwt:
     secret: ${PHARMA_JWT_SECRET:1234}
@@ -20,7 +20,11 @@ pharma:
     accessTokenExpirationInMin: 60
     refreshTokenExpirationInMin: 43830
   upload:
-    type: STORED
+    sessions:
+      - type: medicine_preview
+        maximumFileCount: 5
+        expiredDurationInMin: 60
+    local: true
 server:
   port: 8080
   servlet:

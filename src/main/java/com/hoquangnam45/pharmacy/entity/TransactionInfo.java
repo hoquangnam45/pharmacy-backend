@@ -2,6 +2,8 @@ package com.hoquangnam45.pharmacy.entity;
 
 import com.hoquangnam45.pharmacy.constant.TransactionStatus;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -30,7 +32,9 @@ public class TransactionInfo {
 
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
     private TransactionStatus status;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private OffsetDateTime deletedAt;

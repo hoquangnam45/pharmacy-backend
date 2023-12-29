@@ -32,10 +32,6 @@ public class Medicine {
     private String name;
     private String description;
 
-    @OneToOne
-    @JoinColumn(name = "main_preview_id", referencedColumnName = "id")
-    private MedicinePreview mainPreview;
-
     @ManyToMany
     @JoinTable(
             name = "medicine_tag_x",

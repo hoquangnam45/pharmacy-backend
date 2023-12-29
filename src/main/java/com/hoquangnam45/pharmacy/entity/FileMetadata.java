@@ -36,4 +36,7 @@ public class FileMetadata {
 
     @OneToOne(mappedBy = "fileMetadata")
     private MedicinePreview medicinePreview;
+
+    @OneToOne(mappedBy = "fileMetadata")
+    private MedicinePreviewAudit medicinePreviewAudit;
 }

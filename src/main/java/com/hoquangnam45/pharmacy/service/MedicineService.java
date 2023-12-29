@@ -27,17 +27,21 @@ import com.hoquangnam45.pharmacy.repo.OrderRepo;
 import com.hoquangnam45.pharmacy.repo.ProducerRepo;
 import com.hoquangnam45.pharmacy.repo.TagRepo;
 import com.hoquangnam45.pharmacy.repo.UploadSessionFileMetadataRepo;
+import com.hoquangnam45.pharmacy.service.impl.S3Service;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.hoquangnam45.pharmacy.util.Functions.peek;
@@ -52,13 +56,13 @@ public class MedicineService {
     private final MedicineListingRepo medicineListingRepo;
     private final MedicinePackagingRepo medicinePackagingRepo;
     private final OrderRepo orderRepo;
-    private final S3Service s3Service;
+    private final IS3Service s3Service;
     private final UploadSessionService uploadSessionService;
     private final UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo;
     private final FileMetadataRepo fileMetadataRepo;
     private final MedicinePreviewRepo medicinePreviewRepo;
 
-    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo, S3Service s3Service, UploadSessionService uploadSessionService, UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo, FileMetadataRepo fileMetadataRepo, MedicinePreviewRepo medicinePreviewRepo) {
+    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo, IS3Service s3Service, UploadSessionService uploadSessionService, UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo, FileMetadataRepo fileMetadataRepo, MedicinePreviewRepo medicinePreviewRepo) {
         this.medicineRepo = medicineRepo;
         this.producerRepo = producerRepo;
         this.medicineMapper = medicineMapper;
@@ -73,7 +77,7 @@ public class MedicineService {
         this.medicinePreviewRepo = medicinePreviewRepo;
     }
 
-    public Medicine createMedicineDetail(MedicineDetailCreateRequest createRequest) {
+    public Medicine createMedicineDetail(MedicineDetailCreateRequest createRequest) throws IOException {
         Producer producer = producerRepo.getReferenceById(createRequest.getProducerId());
         Medicine medicine = medicineMapper.createMedicine(createRequest);
         List<Tag> tags = tagRepo.findByValueIn(createRequest.getTags());
@@ -98,37 +102,51 @@ public class MedicineService {
         if (mainPreviewMetadata == null || mainPreviewMetadata.getFileMetadata() != null) {
             throw new UploadSessionInvalidException("Main preview file not found in session");
         }
-        String tempUploadSessionFolder = uploadSessionService.getTempSessionUploadFolder(uploadSession.getType(), uploadSession.getId().toString());
-        String medicinePreviewFolder = uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, medicine.getId().toString());
-        s3Service.copyContentOfFolderToFolder(tempUploadSessionFolder, medicinePreviewFolder);
+        String tempUploadSessionFolder = uploadSessionService.getTempSessionUploadFolder(uploadSession.getType(), uploadSession.getId());
+        String medicinePreviewFolder = uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, medicine.getId());
+        s3Service.copyFolderToFolder(tempUploadSessionFolder, medicinePreviewFolder);
         Medicine finalMedicine = medicine;
-        Map<UUID, UUID> uploadSessionFileToFileMetadata = uploadSessionFileMetadataRepo.findAllByUploadSession_Id(uploadSession.getId()).stream()
-                .collect(Collectors.toMap(
-                        UploadSessionFileMetadata::getId,
-                        UploadSessionFileMetadata::getFileMetadataId
-                ));
-        Map<UUID, MedicinePreview> tempFileMetadataToPreviews = fileMetadataRepo.findAllByUploadSessionFileMetadata_UploadSession_Id(uploadSession.getId()).stream()
+        Map<UUID, FileMetadata> uploadedTempFileMetadatas = fileMetadataRepo.findAllByUploadSessionFileMetadata_UploadSession_Id(uploadSession.getId()).stream()
                 .collect(Collectors.toMap(
                         FileMetadata::getId,
-                        fileMetadata -> {
-                            String relativePath = Path.of(fileMetadata.getPath()).relativize(Path.of(tempUploadSessionFolder)).toString();
+                        Function.identity()));
+        Map<UUID, UploadSessionFileMetadata> uploadSessionFiles = uploadSessionFileMetadataRepo.findAllByUploadSession_Id(uploadSession.getId()).stream()
+                .collect(Collectors.toMap(
+                        UploadSessionFileMetadata::getId,
+                        Function.identity()));
+        Map<UUID, FileMetadata> uploadSessionFilesToTempFileMetadatas = uploadSessionFiles.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Entry::getKey,
+                        entry -> uploadedTempFileMetadatas.get(entry.getValue().getFileMetadataId())));
+        // Clone temp files metadata and change path to final file location
+        Map<UUID, FileMetadata> uploadSessionFileIdsToFinalFileMetadatas = uploadSessionFilesToTempFileMetadatas.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Entry::getKey,
+                        entry -> {
+                            FileMetadata tempFileMetadata = entry.getValue();
+                            String relativePath = Path.of(tempFileMetadata.getPath()).relativize(Path.of(tempUploadSessionFolder)).toString();
                             String newPath = Path.of(medicinePreviewFolder, relativePath).toString();
                             FileMetadata finalMetadata = new FileMetadata();
-                            finalMetadata.setName(fileMetadata.getName());
-                            finalMetadata.setExtension(fileMetadata.getExtension());
-                            finalMetadata.setContentType(fileMetadata.getContentType());
-                            finalMetadata.setCreatedAt(fileMetadata.getCreatedAt());
+                            finalMetadata.setName(tempFileMetadata.getName());
+                            finalMetadata.setExtension(tempFileMetadata.getExtension());
+                            finalMetadata.setContentType(tempFileMetadata.getContentType());
+                            finalMetadata.setCreatedAt(tempFileMetadata.getCreatedAt());
                             finalMetadata.setPath(newPath);
-                            finalMetadata = fileMetadataRepo.save(finalMetadata);
+                            return fileMetadataRepo.save(finalMetadata);
+                        }));
+        Map<UUID, MedicinePreview> fileMetadataToPreviews = uploadSessionFileIdsToFinalFileMetadatas.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getValue().getId(),
+                        entry -> {
+                            FileMetadata finalFileMetadata = entry.getValue();
+                            UUID uploadSessionFileId = entry.getKey();
                             MedicinePreview preview = new MedicinePreview();
                             preview.setMedicine(finalMedicine);
-                            preview.setFileMetadata(finalMetadata);
-                            return preview;
-                        }
-                ));
-        medicine.setMainPreview(tempFileMetadataToPreviews.get(uploadSessionFileToFileMetadata.get(createRequest.getMainPreviewId())));
-        tempFileMetadataToPreviews.values().forEach(medicinePreviewRepo::save);
-        finalMedicine.setPreviews(new HashSet<>(tempFileMetadataToPreviews.values()));
+                            preview.setFileMetadata(finalFileMetadata);
+                            preview.setMainPreview(createRequest.getMainPreviewId().equals(uploadSessionFileId));
+                            return medicinePreviewRepo.save(preview);
+                        }));
+        finalMedicine.setPreviews(new HashSet<>(fileMetadataToPreviews.values()));
 
         // Clean-up upload session
         uploadSessionService.deleteSession(uploadSession);
@@ -187,7 +205,7 @@ public class MedicineService {
         return new PartialPage<>(more, tags);
     }
 
-    public void deleteMedicine(UUID id) {
+    public void deleteMedicine(UUID id) throws IOException {
         Medicine medicine = medicineRepo.findById(id).orElse(null);
         if (medicine == null) {
             return;
@@ -199,7 +217,7 @@ public class MedicineService {
         medicinePackagingRepo.deleteAllByMedicine_Id(medicine.getId());
 
         // delete uploaded file
-        s3Service.deleteFolder(uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, id.toString()));
+        s3Service.deleteFolder(uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, id));
         List<FileMetadata> toBeDeletedFileMetadatas = fileMetadataRepo.findAllByMedicinePreview_Medicine_Id(medicine.getId());
         medicinePreviewRepo.deleteAllByMedicine_Id(medicine.getId());
         toBeDeletedFileMetadatas.forEach(fileMetadataRepo::delete);

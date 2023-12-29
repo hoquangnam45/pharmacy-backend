@@ -34,6 +34,7 @@ public class DeliveryInfoAudit {
     @JoinColumn(name = "phone_number_id")
     private PhoneNumber phoneNumber;
 
+    // The reason for this is to allow them to have different recipient with 1 account
     private String recipientName;
 
     @ManyToOne

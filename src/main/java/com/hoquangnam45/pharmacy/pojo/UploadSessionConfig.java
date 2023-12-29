@@ -13,6 +13,7 @@ public class UploadSessionConfig {
     private String type;
     private int maximumFileCount;
     private int expiredDurationInMin;
+    private String prefix;
 
     public Duration getExpiredDurationInMin() {
         return Duration.ofMinutes(expiredDurationInMin);

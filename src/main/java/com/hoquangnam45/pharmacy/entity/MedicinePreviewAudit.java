@@ -9,7 +9,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 // Why have a separate table for preview, one use-case is after you uploaded the file,
@@ -20,8 +19,8 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "medicine_preview")
-public class MedicinePreview {
+@Table(name = "medicine_preview_audit")
+public class MedicinePreviewAudit {
     @Id
     private UUID id;
 
@@ -31,7 +30,7 @@ public class MedicinePreview {
 
     @ManyToOne
     @JoinColumn(name = "medicine_id", referencedColumnName = "id")
-    private Medicine medicine;
+    private MedicineAudit medicine;
 
     private boolean mainPreview;
 }
