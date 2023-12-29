@@ -24,6 +24,7 @@ pharma:
       - type: medicine_preview
         maximumFileCount: 5
         expiredDurationInMin: 60
+        prefix: ./uploaded/medicine_preview
     local: true
 server:
   port: 8080

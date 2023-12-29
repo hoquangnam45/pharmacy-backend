@@ -9,7 +9,6 @@ import com.hoquangnam45.pharmacy.pojo.UploadSessionConfig;
 import com.hoquangnam45.pharmacy.repo.FileMetadataRepo;
 import com.hoquangnam45.pharmacy.repo.UploadSessionFileMetadataRepo;
 import com.hoquangnam45.pharmacy.repo.UploadSessionRepo;
-import com.hoquangnam45.pharmacy.service.impl.S3Service;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -88,16 +87,16 @@ public class UploadSessionService {
                 .anyMatch(uploadFileMetadataId -> uploadFileMetadataId.equals(fileId));
     }
 
-    public String getTempSessionFileUploadKey(String type, UUID sessionId, String fileName) {
-        return MessageFormat.format("{0}/{1}", getTempSessionUploadFolder(type, sessionId), fileName);
-    }
-
     public String getTempSessionUploadFolder(String type, UUID sessionId) {
         return MessageFormat.format("{0}/tmp/{1}", uploadSessionConfigs.get(type).getPrefix(), sessionId);
     }
 
-    public String getFinalUploadFolder(String type, UUID sessionId) {
-        return MessageFormat.format("{0}/{1}", uploadSessionConfigs.get(type).getPrefix(), sessionId);
+    public String getTempItemSessionUploadFolder(String type, UUID sessionId, UUID fileId) {
+        return MessageFormat.format("{0}/{1}", getTempSessionUploadFolder(type, sessionId), fileId);
+    }
+
+    public String getFinalUploadFolder(String type, UUID id) {
+        return MessageFormat.format("{0}/{1}", uploadSessionConfigs.get(type).getPrefix(), id);
     }
 
     public void storeTempFileMetadata(UUID sessionId, UUID uploadSessionFileMetadataId, String fileName, String extension, String contentType, String filePath) throws IOException {

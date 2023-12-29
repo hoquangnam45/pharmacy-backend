@@ -13,7 +13,6 @@ import com.hoquangnam45.pharmacy.pojo.UpdateListingRequest;
 import com.hoquangnam45.pharmacy.pojo.UploadSessionCreateResponse;
 import com.hoquangnam45.pharmacy.service.IS3Service;
 import com.hoquangnam45.pharmacy.service.MedicineService;
-import com.hoquangnam45.pharmacy.service.impl.S3Service;
 import com.hoquangnam45.pharmacy.service.UploadSessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -155,7 +154,8 @@ public class MedicineAdminController {
                 throw ApiError.badRequest(MessageFormat.format("Not allowed uploaded file with detected mime type {0} and extension {1}", detectedMimeType, fileExtension));
             } else {
                 String fileName = fileId + fileExtension;
-                String tempFileUploadKey = uploadSessionService.getTempSessionFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileName);
+                String tempFileUploadFolder = uploadSessionService.getTempItemSessionUploadFolder(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId);
+                String tempFileUploadKey = MessageFormat.format("{0}/{1}", tempFileUploadFolder, fileName);
                 s3Service.uploadFile(file, tempFileUploadKey);
                 uploadSessionService.storeTempFileMetadata(
                         sessionId,
@@ -190,10 +190,10 @@ public class MedicineAdminController {
     @DeleteMapping("upload/{sessionId}/{itemId}")
     public ResponseEntity<GenericResponse> deleteUploadedFile(
             @PathVariable("sessionId") UUID sessionId,
-            @PathVariable("itemId") String fileId,
+            @PathVariable("itemId") UUID fileId,
             HttpServletRequest request) throws IOException {
         String path = request.getServletPath();
-        s3Service.deleteFile(uploadSessionService.getTempSessionFileUploadKey(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId));
+        s3Service.deleteFolder(uploadSessionService.getTempItemSessionUploadFolder(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId));
         return ResponseEntity.ok().body(new GenericResponse(200, path, "Delete item successfully"));
     }
 }

@@ -27,7 +27,6 @@ import com.hoquangnam45.pharmacy.repo.OrderRepo;
 import com.hoquangnam45.pharmacy.repo.ProducerRepo;
 import com.hoquangnam45.pharmacy.repo.TagRepo;
 import com.hoquangnam45.pharmacy.repo.UploadSessionFileMetadataRepo;
-import com.hoquangnam45.pharmacy.service.impl.S3Service;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
