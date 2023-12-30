@@ -31,7 +31,7 @@ create table tag(
 
 create table upload_session_file_metadata(
     id uuid not null primary key default gen_random_uuid(),
-    file_metadata_id uuid not null unique,
+    file_metadata_id uuid unique,
     upload_session_id uuid not null,
     constraint fk_upload_session_file_metadata_file_metadata_id foreign key(file_metadata_id) references file_metadata(id),
     constraint fk_upload_session_file_metadata_upload_session_id foreign key(upload_session_id) references upload_session(id)

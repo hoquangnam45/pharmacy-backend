@@ -1,9 +1,11 @@
 package com.hoquangnam45.pharmacy.controller.admin;
 
+import com.hoquangnam45.pharmacy.component.MedicineMapper;
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
 import com.hoquangnam45.pharmacy.entity.UploadSession;
 import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;
 import com.hoquangnam45.pharmacy.exception.ApiError;
+import com.hoquangnam45.pharmacy.pojo.FileMetadata;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicineListingCreateRequest;
@@ -55,12 +57,14 @@ public class MedicineAdminController {
     private final MedicineService medicineService;
     private final IS3Service s3Service;
     private final UploadSessionService uploadSessionService;
+    private final MedicineMapper medicineMapper;
 
-    public MedicineAdminController(Tika tika, MedicineService medicineService, IS3Service s3Service, UploadSessionService uploadSessionService) {
+    public MedicineAdminController(Tika tika, MedicineService medicineService, IS3Service s3Service, UploadSessionService uploadSessionService, MedicineMapper medicineMapper) {
         this.tika = tika;
         this.medicineService = medicineService;
         this.s3Service = s3Service;
         this.uploadSessionService = uploadSessionService;
+        this.medicineMapper = medicineMapper;
     }
 
     @PostMapping
@@ -133,39 +137,38 @@ public class MedicineAdminController {
     }
 
     @PostMapping("upload/{sessionId}/{itemId}")
-    public ResponseEntity<GenericResponse> uploadFile(
+    public ResponseEntity<FileMetadata> uploadFile(
             @RequestParam("file") MultipartFile file,
             @PathVariable("sessionId") UUID sessionId,
-            @PathVariable("itemId") UUID fileId,
-            HttpServletRequest request) throws IOException, MimeTypeException {
+            @PathVariable("itemId") UUID fileId) throws IOException, MimeTypeException {
         if (uploadSessionService.hasSessionExpired(sessionId)) {
             throw ApiError.notFound("Session either expired or not started yet");
-        } else if (uploadSessionService.allowItemId(sessionId, fileId)) {
+        } else if (!uploadSessionService.allowItemId(sessionId, fileId)) {
             throw ApiError.badRequest("Not allowed to upload using file id " + fileId);
         } else if (MAXIMUM_FILE_SIZE_IN_BYTE < file.getSize()) {
             throw ApiError.badRequest("Exceeded maximum file size");
         } else {
-            String path = request.getServletPath();
             String detectedMimeType = tika.detect(file.getInputStream());
             MimeTypes allTypes = MimeTypes.getDefaultMimeTypes();
             MimeType type = allTypes.forName(detectedMimeType);
-            String fileExtension = type.getExtension();
-            if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
+            String fileExtension = type.getExtension().split("\\.")[1];
+            if (!ALLOWED_EXTENSIONS.contains("." + fileExtension)) {
                 throw ApiError.badRequest(MessageFormat.format("Not allowed uploaded file with detected mime type {0} and extension {1}", detectedMimeType, fileExtension));
             } else {
-                String fileName = fileId + fileExtension;
+                String fileName = fileId + "." + fileExtension;
                 String tempFileUploadFolder = uploadSessionService.getTempItemSessionUploadFolder(MEDICINE_PREVIEW_SESSION_TYPE, sessionId, fileId);
                 String tempFileUploadKey = MessageFormat.format("{0}/{1}", tempFileUploadFolder, fileName);
-                s3Service.uploadFile(file, tempFileUploadKey);
-                uploadSessionService.storeTempFileMetadata(
+                FileMetadata resp = medicineMapper.createResponseFileMetadata(uploadSessionService.storeTempFileMetadata(
+                        MEDICINE_PREVIEW_SESSION_TYPE,
                         sessionId,
                         fileId,
                         fileName,
                         fileExtension,
                         detectedMimeType,
-                        tempFileUploadKey);
+                        tempFileUploadKey), sessionId, fileId, s3Service.getDownloadPath(tempFileUploadKey));
+                s3Service.uploadFile(file, tempFileUploadKey);
                 uploadSessionService.renewSession(MEDICINE_PREVIEW_SESSION_TYPE, sessionId);
-                return ResponseEntity.ok(new GenericResponse(200, path, "Uploaded successfully", s3Service.getDownloadPath(tempFileUploadKey)));
+                return ResponseEntity.ok(resp);
             }
         }
     }

@@ -21,11 +21,11 @@ public class ApiError extends RuntimeException {
     }
 
     public static ApiError forbidden(String message) {
-        return new ApiError(HttpStatus.UNAUTHORIZED, message);
+        return new ApiError(HttpStatus.FORBIDDEN, message);
     }
 
     public static ApiError unauthorized(String message) {
-        return new ApiError(HttpStatus.FORBIDDEN, message);
+        return new ApiError(HttpStatus.UNAUTHORIZED, message);
     }
 
     public static ApiError conflict(String message) {

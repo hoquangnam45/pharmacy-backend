@@ -17,6 +17,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -55,11 +56,14 @@ public class UploadSessionService {
         session.setType(type);
         session.setCreatedAt(now);
         session.setExpiredAt(expiredAt);
+        session = uploadSessionRepo.save(session);
+        UploadSession finalSession = session;
         session.setUploadSessionFileMetadatas(IntStream.range(0, config.getMaximumFileCount())
                 .mapToObj(idx -> new UploadSessionFileMetadata())
-                .peek(metadata -> metadata.setUploadSession(session))
+                .peek(metadata -> metadata.setUploadSession(finalSession))
+                .peek(uploadSessionFileMetadataRepo::save)
                 .collect(Collectors.toSet()));
-        return uploadSessionRepo.save(session);
+        return session;
     }
 
     public void renewSession(String type, UUID sessionId) {
@@ -79,12 +83,7 @@ public class UploadSessionService {
     }
 
     public boolean allowItemId(UUID sessionId, UUID fileId) {
-        return uploadSessionRepo.findById(sessionId)
-                .map(UploadSession::getUploadSessionFileMetadatas)
-                .stream()
-                .flatMap(Set::stream)
-                .map(UploadSessionFileMetadata::getId)
-                .anyMatch(uploadFileMetadataId -> uploadFileMetadataId.equals(fileId));
+        return Optional.ofNullable(uploadSessionFileMetadataRepo.findByUploadSession_IdAndId(sessionId, fileId)).isPresent();
     }
 
     public String getTempSessionUploadFolder(String type, UUID sessionId) {
@@ -99,7 +98,7 @@ public class UploadSessionService {
         return MessageFormat.format("{0}/{1}", uploadSessionConfigs.get(type).getPrefix(), id);
     }
 
-    public void storeTempFileMetadata(UUID sessionId, UUID uploadSessionFileMetadataId, String fileName, String extension, String contentType, String filePath) throws IOException {
+    public FileMetadata storeTempFileMetadata(String type, UUID sessionId, UUID uploadSessionFileMetadataId, String fileName, String extension, String contentType, String filePath) throws IOException {
         // Delete previous file
         UploadSessionFileMetadata uploadSessionFileMetadata = uploadSessionFileMetadataRepo.findByUploadSession_IdAndId(sessionId, uploadSessionFileMetadataId);
         if (uploadSessionFileMetadata == null) {
@@ -107,7 +106,7 @@ public class UploadSessionService {
         }
         FileMetadata fileMetadata = uploadSessionFileMetadata.getFileMetadata();
         if (fileMetadata != null) {
-            s3Service.deleteFile(fileMetadata.getPath());
+            s3Service.deleteFolder(getTempItemSessionUploadFolder(type, sessionId, uploadSessionFileMetadataId));
             fileMetadataRepo.delete(fileMetadata);
         }
         FileMetadata metadata = new FileMetadata();
@@ -118,7 +117,9 @@ public class UploadSessionService {
         metadata.setContentType(contentType);
         metadata.setUploadSessionFileMetadata(uploadSessionFileMetadata);
         metadata.setExtension(extension);
-        fileMetadataRepo.save(metadata);
+        FileMetadata savedMetadata = fileMetadataRepo.save(metadata);
+        uploadSessionFileMetadata.setFileMetadataId(savedMetadata.getId());
+        return metadata;
     }
 
     public UploadSession getUploadSession(UUID id) {
@@ -133,7 +134,10 @@ public class UploadSessionService {
         s3Service.deleteFolder(getTempSessionUploadFolder(uploadSession.getType(), uploadSession.getId()));
         Set<UploadSessionFileMetadata> uploadSessionFileMetadatas = uploadSession.getUploadSessionFileMetadatas();
         uploadSessionFileMetadatas.forEach(uploadSessionFileMetadataRepo::delete);
-        uploadSessionFileMetadatas.stream().map(UploadSessionFileMetadata::getFileMetadataId).forEach(fileMetadataRepo::deleteById);
+        uploadSessionFileMetadatas.stream()
+                .map(UploadSessionFileMetadata::getFileMetadataId)
+                .filter(Objects::nonNull)
+                .forEach(fileMetadataRepo::deleteById);
         uploadSessionRepo.delete(uploadSession);
     }
 }

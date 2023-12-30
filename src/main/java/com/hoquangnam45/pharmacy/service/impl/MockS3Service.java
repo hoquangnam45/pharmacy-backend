@@ -18,18 +18,14 @@ public class MockS3Service implements IS3Service {
         FileUtils.createParentDirectories(storedFile);
         storedFile.createNewFile();
         try (InputStream is = file.getInputStream();
-             BufferedInputStream bis = new BufferedInputStream(is);
-             FileWriter writer = new FileWriter(storedFile);
-             BufferedWriter bw = new BufferedWriter(writer)) {
-            while (bis.available() > 0) {
-                bw.write(bis.read());
-            }
+             BufferedInputStream bis = new BufferedInputStream(is)) {
+            FileUtils.copyInputStreamToFile(bis, storedFile);
         }
     }
 
     @Override
     public String getDownloadPath(String key) {
-        return new File(key).getAbsoluteFile().toURI().getPath();
+        return new File(key).getAbsoluteFile().toURI().normalize().getPath();
     }
 
     @Override

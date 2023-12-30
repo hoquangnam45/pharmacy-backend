@@ -13,6 +13,10 @@ spring:
         formatSql: true
     hibernate:
       ddlAuto: validate
+  servlet:
+    multipart:
+      maxFileSize: -1
+      maxRequestSize: -1
 pharma:
   jwt:
     secret: ${PHARMA_JWT_SECRET:1234}

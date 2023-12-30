@@ -4,12 +4,15 @@ import com.hoquangnam45.pharmacy.entity.Medicine;
 import com.hoquangnam45.pharmacy.entity.MedicineListing;
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
 import com.hoquangnam45.pharmacy.entity.Producer;
+import com.hoquangnam45.pharmacy.pojo.FileMetadata;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicineListingCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicinePackagingRequest;
 import com.hoquangnam45.pharmacy.pojo.ProducerCreateRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import java.util.UUID;
 
 @Mapper
 public interface MedicineMapper {
@@ -33,4 +36,6 @@ public interface MedicineMapper {
     @Mapping(target = "medicine", ignore = true)
     @Mapping(target = "id", ignore = true)
     MedicinePackaging createMedicinePackaging(MedicinePackagingRequest createRequest);
+
+    FileMetadata createResponseFileMetadata(com.hoquangnam45.pharmacy.entity.FileMetadata metadata, UUID uploadSessionId, UUID uploadSessionFileId, String downloadPath);
 }
