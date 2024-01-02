@@ -1,6 +1,7 @@
 package com.hoquangnam45.pharmacy.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @Table(name = "medicine_preview")
 public class MedicinePreview {
     @Id
+    @GeneratedValue
     private UUID id;
 
     @OneToOne

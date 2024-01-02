@@ -98,11 +98,11 @@ public class MedicineService {
             throw new UploadSessionInvalidException("Main preview id is missing");
         }
         UploadSessionFileMetadata mainPreviewMetadata = uploadSessionFileMetadataRepo.findByUploadSession_IdAndId(uploadSession.getId(), createRequest.getMainPreviewId());
-        if (mainPreviewMetadata == null || mainPreviewMetadata.getFileMetadata() != null) {
+        if (mainPreviewMetadata == null || mainPreviewMetadata.getFileMetadataId() == null) {
             throw new UploadSessionInvalidException("Main preview file not found in session");
         }
         String tempUploadSessionFolder = uploadSessionService.getTempSessionUploadFolder(uploadSession.getType(), uploadSession.getId());
-        String medicinePreviewFolder = uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, medicine.getId());
+        String medicinePreviewFolder = uploadSessionService.getFinalUploadFolder(MedicineAdminController.MEDICINE_PREVIEW_SESSION_TYPE, uploadSession.getId());
         s3Service.copyFolderToFolder(tempUploadSessionFolder, medicinePreviewFolder);
         Medicine finalMedicine = medicine;
         Map<UUID, FileMetadata> uploadedTempFileMetadatas = fileMetadataRepo.findAllByUploadSessionFileMetadata_UploadSession_Id(uploadSession.getId()).stream()
@@ -114,6 +114,7 @@ public class MedicineService {
                         UploadSessionFileMetadata::getId,
                         Function.identity()));
         Map<UUID, FileMetadata> uploadSessionFilesToTempFileMetadatas = uploadSessionFiles.entrySet().stream()
+                .filter(entry -> entry.getValue().getFileMetadataId() != null)
                 .collect(Collectors.toMap(
                         Entry::getKey,
                         entry -> uploadedTempFileMetadatas.get(entry.getValue().getFileMetadataId())));
@@ -123,7 +124,7 @@ public class MedicineService {
                         Entry::getKey,
                         entry -> {
                             FileMetadata tempFileMetadata = entry.getValue();
-                            String relativePath = Path.of(tempFileMetadata.getPath()).relativize(Path.of(tempUploadSessionFolder)).toString();
+                            String relativePath = Path.of(tempUploadSessionFolder).relativize(Path.of(tempFileMetadata.getPath())).toString();
                             String newPath = Path.of(medicinePreviewFolder, relativePath).toString();
                             FileMetadata finalMetadata = new FileMetadata();
                             finalMetadata.setName(tempFileMetadata.getName());

@@ -95,7 +95,7 @@ public class UploadSessionService {
     }
 
     public String getFinalUploadFolder(String type, UUID id) {
-        return MessageFormat.format("{0}/{1}", uploadSessionConfigs.get(type).getPrefix(), id);
+        return MessageFormat.format("{0}/final/{1}", uploadSessionConfigs.get(type).getPrefix(), id);
     }
 
     public FileMetadata storeTempFileMetadata(String type, UUID sessionId, UUID uploadSessionFileMetadataId, String fileName, String extension, String contentType, String filePath) throws IOException {

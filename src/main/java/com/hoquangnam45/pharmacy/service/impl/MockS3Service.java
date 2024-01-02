@@ -45,6 +45,6 @@ public class MockS3Service implements IS3Service {
 
     @Override
     public void copyFolderToFolder(String folderA, String folderB) throws IOException {
-        FileUtils.copyDirectoryToDirectory(new File(folderA), new File(folderB));
+        FileUtils.copyDirectory(new File(folderA), new File(folderB));
     }
 }
