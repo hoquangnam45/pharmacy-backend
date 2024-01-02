@@ -1,6 +1,7 @@
 package com.hoquangnam45.pharmacy.controller;
 
 import com.hoquangnam45.pharmacy.entity.Tag;
+import com.hoquangnam45.pharmacy.pojo.MedicineInfo;
 import com.hoquangnam45.pharmacy.pojo.PartialPage;
 import com.hoquangnam45.pharmacy.service.MedicineService;
 import org.springframework.http.ResponseEntity;
@@ -24,4 +25,9 @@ public class MedicineController {
             @RequestParam(value = "limit", defaultValue = "5") Integer limit) {
         return ResponseEntity.ok().body(medicineService.findTag(query, limit));
     }
+
+//    @GetMapping
+//    public ResponseEntity<PartialPage<MedicineInfo>> getMedicineInfo() {
+//
+//    }
 }

@@ -43,7 +43,7 @@ public class CustomAuthentication implements Authentication {
     }
 
     public static CustomAuthentication authenticated(User user) {
-        return new CustomAuthentication((PrincipalSupplier) () -> user.getId().toString(),
+        return new CustomAuthentication(user.getId().toString(),
             user.getPassword(),
             true,
             Optional.ofNullable(user.getPermissions())
@@ -57,7 +57,7 @@ public class CustomAuthentication implements Authentication {
 
     public static CustomAuthentication authenticated(RefreshToken refreshToken) {
         User user = refreshToken.getUser();
-        return new CustomAuthentication((PrincipalSupplier) () -> user.getId().toString(),
+        return new CustomAuthentication(user.getId().toString(),
             refreshToken.getRefreshToken(),
             true,
             user.getPermissions().stream()
@@ -69,7 +69,7 @@ public class CustomAuthentication implements Authentication {
 
     public static CustomAuthentication authenticated(DecodedJWT decodedJWT, String accessToken) {
         return new CustomAuthentication(
-                (PrincipalSupplier) decodedJWT::getSubject,
+                decodedJWT.getSubject(),
                 accessToken,
                 true,
                 decodedJWT.getClaim(JwtClaim.ROLE).asList(String.class).stream()
@@ -119,9 +119,7 @@ public class CustomAuthentication implements Authentication {
 
     @Override
     public String getName() {
-        if (principal instanceof PrincipalSupplier) {
-            return ((PrincipalSupplier) principal).getPrincipal();
-        } else if (principal instanceof Principal) {
+        if (principal instanceof Principal) {
             return ((Principal) principal).getName();
         } else if (principal instanceof String) {
             return (String) principal;

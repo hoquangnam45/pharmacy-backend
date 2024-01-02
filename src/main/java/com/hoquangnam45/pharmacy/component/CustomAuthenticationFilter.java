@@ -74,8 +74,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                         request.getServletPath(),
                         (String) authentication.getDetails())));
                 return;
+            } else {
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(request, response);
     }

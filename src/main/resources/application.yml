@@ -30,7 +30,9 @@ pharma:
         expiredDurationInMin: 60
         prefix: ./uploaded/medicine_preview
     local: true
+  order:
+    expiredDurationInDays: 3
 server:
-  port: 8080
+  port: 8888
   servlet:
     contextPath: /api/v1

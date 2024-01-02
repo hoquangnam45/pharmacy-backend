@@ -1,6 +1,6 @@
 package com.hoquangnam45.pharmacy.entity;
 
-import com.hoquangnam45.pharmacy.constant.TransactionStatus;
+import com.hoquangnam45.pharmacy.constant.PaymentMethod;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,36 +15,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "transaction_info")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionInfo {
+@Table(name = "payment_info")
+public class PaymentInfo {
     @Id
     @GeneratedValue
     private UUID id;
 
-    @OneToOne
-    @JoinColumn(name = "order_id", referencedColumnName = "id")
-    private Order order;
-
-    @JoinColumn(name = "payment_id")
-    private PaymentInfo payment;
-
-    private BigDecimal amount;
-
     @Enumerated(EnumType.STRING)
-    private TransactionStatus status;
+    private PaymentMethod method;
 
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
-    private OffsetDateTime deletedAt;
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
+
+    @OneToOne(mappedBy = "payment")
+    private MomoPaymentDetail momoPaymentDetail;
 }

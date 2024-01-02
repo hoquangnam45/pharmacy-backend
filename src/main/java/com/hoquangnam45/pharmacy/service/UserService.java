@@ -1,12 +1,15 @@
 package com.hoquangnam45.pharmacy.service;
 
 import com.hoquangnam45.pharmacy.component.UserMapper;
+import com.hoquangnam45.pharmacy.constant.PaymentMethod;
+import com.hoquangnam45.pharmacy.entity.PaymentInfo;
 import com.hoquangnam45.pharmacy.entity.PhoneNumber;
 import com.hoquangnam45.pharmacy.entity.User;
 import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.CustomAuthenticationPrincipal;
 import com.hoquangnam45.pharmacy.pojo.RegisterRequest;
 import com.hoquangnam45.pharmacy.pojo.UserProfile;
+import com.hoquangnam45.pharmacy.repo.PaymentRepo;
 import com.hoquangnam45.pharmacy.repo.PhoneRepo;
 import com.hoquangnam45.pharmacy.repo.UserRepo;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,19 +24,30 @@ public class UserService {
     private final PhoneRepo phoneRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final PaymentRepo paymentRepo;
 
-    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder) {
+    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder, PaymentRepo paymentRepo) {
         this.userRepo = userRepo;
         this.phoneRepo = phoneRepo;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.paymentRepo = paymentRepo;
     }
 
     public User createUser(RegisterRequest registerRequest) {
         String encryptedPassword = passwordEncoder.encode(registerRequest.getPassword());
         User user = userMapper.createNewUser(registerRequest);
         user.setPassword(encryptedPassword);
-        return userRepo.save(user);
+
+        User savedUser = userRepo.save(user);
+
+        // Create default COD payment method
+        PaymentInfo codPayment = PaymentInfo.builder()
+                .method(PaymentMethod.COD)
+                .user(savedUser)
+                .build();
+
+        return savedUser;
     }
 
     public User getUser(CustomAuthenticationPrincipal principal) {

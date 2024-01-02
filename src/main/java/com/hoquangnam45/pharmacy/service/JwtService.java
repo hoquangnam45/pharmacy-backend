@@ -10,7 +10,6 @@ import com.hoquangnam45.pharmacy.constant.AuthenticationType;
 import com.hoquangnam45.pharmacy.constant.JwtClaim;
 import com.hoquangnam45.pharmacy.entity.RefreshToken;
 import com.hoquangnam45.pharmacy.pojo.JwtToken;
-import com.hoquangnam45.pharmacy.pojo.PrincipalSupplier;
 import com.hoquangnam45.pharmacy.repo.RefreshTokenRepo;
 import com.hoquangnam45.pharmacy.repo.UserRepo;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,11 +50,11 @@ public class JwtService {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         OffsetDateTime accessTokenExpiredAt = now.plus(jwtConfig.getAccessTokenExpirationInMin());
         OffsetDateTime refreshTokenExpiredAt = now.plus(jwtConfig.getRefreshTokenExpirationInMin());
-        PrincipalSupplier principalSupplier = (PrincipalSupplier) authentication.getPrincipal();
+        String principal = (String) authentication.getPrincipal();
         String accessToken = JWT.create()
                 .withIssuer(jwtConfig.getIssuer())
                 .withIssuedAt(now.toInstant())
-                .withSubject(principalSupplier.getPrincipal())
+                .withSubject(principal)
                 .withExpiresAt(accessTokenExpiredAt.toInstant())
                 .withClaim(JwtClaim.ROLE, Optional.ofNullable(authentication.getAuthorities())
                         .map(authorities -> authorities.stream().map(GrantedAuthority::getAuthority))

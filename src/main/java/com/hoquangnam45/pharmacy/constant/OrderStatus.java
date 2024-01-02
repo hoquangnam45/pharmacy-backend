@@ -1,7 +1,7 @@
 package com.hoquangnam45.pharmacy.constant;
 
 public enum OrderStatus {
-    PENDING,
+    NEW,
     TRANSACTED,
     IN_DELIVERY,
     DELIVERED,

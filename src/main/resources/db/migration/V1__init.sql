@@ -235,15 +235,31 @@ create table order_info(
     constraint fk_order_info_delivery_info_id foreign key(delivery_info_id) references delivery_info_audit(id)
 );
 
+create table momo_payment_detail(
+    id uuid not null primary key default gen_random_uu(),
+    payment_id uuid not null,
+    momo_phone_number varchar(255) not null,
+    constraint fk_momo_payment_detail_payment_id foreign key(payment_id) references payment_info(id)
+);
+
+create table payment_info(
+    id uuid not null primary key default gen_random_uu(),
+    method varchar(255) not null,
+    user_id uuid not null,
+    constraint fk_payment_info_user_id foreign key(user_id) references user_info(id)
+);
+
 create table transaction_info(
 	id uuid not null primary key default gen_random_uuid(),
     order_id uuid unique not null,
     amount decimal not null,
     status varchar(255) not null,
+    payment_id uuid not null,
     created_at timestamp not null,
     updated_at timestamp,
     deleted_at timestamp,
-    constraint fk_transaction_info_order_id foreign key(order_id) references order_info(id)
+    constraint fk_transaction_info_order_id foreign key(order_id) references order_info(id),
+    constraint fk_transaction_info_payment_id foreign key(payment_id) references payment_info(id)
 );
 --insert into user_info(username, password) values('example_user', 'example_password');
 --insert into user_permission_x(user_id, role) values((select id from user_info where username='example_user'), 'ADMIN');
