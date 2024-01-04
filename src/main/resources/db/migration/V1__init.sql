@@ -128,6 +128,9 @@ create table medicine_preview_audit(
     medicine_id uuid not null,
     file_metadata_id uuid not null,
     main_preview boolean not null,
+    audit_object_id varchar(255) not null,
+    created_at timestamp not null,
+    active boolean not null default false,
     constraint fk_medicine_preview_file_metadata_id foreign key(file_metadata_id) references file_metadata(id),
     constraint fk_medicine_preview_medicine_id foreign key(medicine_id) references medicine_audit(id)
 );
@@ -145,6 +148,9 @@ create table medicine_tag_audit_x(
     id uuid not null primary key default gen_random_uuid(),
     medicine_id uuid not null,
     tag_id uuid not null,
+    audit_object_id varchar(255) not null,
+    created_at timestamp not null,
+    active boolean not null default false,
     constraint unique_medicine_tag_audit_x_medicine_tag unique(medicine_id, tag_id),
     constraint fk_medicine_tag_audit_x_tag_id foreign key(tag_id) references tag(id),
     constraint fk_medicine_tag_audit_x_medicine_id foreign key(medicine_id) references medicine_audit(id)

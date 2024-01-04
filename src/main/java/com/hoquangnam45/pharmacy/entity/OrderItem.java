@@ -1,14 +1,10 @@
 package com.hoquangnam45.pharmacy.entity;
 
-import com.hoquangnam45.pharmacy.constant.PaymentMethod;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,27 +12,30 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
+@Table(name = "order_info_item")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "payment_info")
-public class PaymentInfo {
+public class OrderItem {
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentMethod method;
+    @ManyToOne
+    @JoinColumn(name = "listing_id", referencedColumnName = "id")
+    private MedicineListingAudit listing;
+
+    private Integer quantity;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+    @JoinColumn(name = "order_id", referencedColumnName = "id")
+    private Order order;
 
-    @OneToOne(mappedBy = "payment")
-    private MomoPaymentDetail momoPaymentDetail;
+    private OffsetDateTime createdAt;
 }

@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,4 +39,8 @@ public class MedicinePackaging {
 
     @OneToMany(mappedBy = "packaging")
     private Set<MedicineListing> listings;
+
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
+    private OffsetDateTime deletedAt;
 }

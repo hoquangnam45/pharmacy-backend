@@ -39,4 +39,7 @@ public class MedicinePackagingAudit {
 
     @OneToMany(mappedBy = "packaging")
     private Set<MedicineListingAudit> listings;
+
+    @Embedded
+    private AuditInfo auditInfo;
 }

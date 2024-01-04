@@ -10,11 +10,9 @@ import java.util.Optional;
 @Component
 public class OrderPriceCalculator {
     public BigDecimal calculateOrderPrice(Order order) {
-        return Optional.ofNullable(order.getListing())
-                .map(MedicineListingAudit::getPrice)
-                .flatMap(price -> Optional.ofNullable(order.getQuantity())
-                        .map(BigDecimal::valueOf)
-                        .map(quantity -> quantity.multiply(price))
-                ).orElseThrow(() -> new UnsupportedOperationException("Order missing quantity or listing price, final price cannot be calculated"));
+        return order.getOrderItems().stream()
+                .map(orderItem -> orderItem.getListing().getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
     }
 }

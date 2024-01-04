@@ -1,15 +1,12 @@
 package com.hoquangnam45.pharmacy.controller;
 
 import com.hoquangnam45.pharmacy.component.OrderMapper;
-import com.hoquangnam45.pharmacy.entity.Order;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.pojo.OrderCreationResponse;
 import com.hoquangnam45.pharmacy.pojo.PlaceOrderRequest;
-import com.hoquangnam45.pharmacy.service.MedicineService;
 import com.hoquangnam45.pharmacy.service.OrderService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +27,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderCreationResponse> placingOrder(@RequestBody PlaceOrderRequest request) {
-        return ResponseEntity.ok(orderMapper.createNewOrder(orderService.createNewOrder(request)));
+        return ResponseEntity.ok(orderMapper.mapToNewOrderResponse(orderService.createNewOrder(request)));
     }
 
     @PostMapping

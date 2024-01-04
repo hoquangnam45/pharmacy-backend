@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -33,12 +35,6 @@ public class Order {
     @GeneratedValue
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "listing_id", referencedColumnName = "id")
-    private MedicineListingAudit listing;
-
-    private Integer quantity;
-
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
@@ -48,6 +44,9 @@ public class Order {
 
     @OneToOne(mappedBy = "order")
     private TransactionInfo transactionInfo;
+
+    @OneToMany(mappedBy = "order")
+    private Set<OrderItem> orderItems;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")

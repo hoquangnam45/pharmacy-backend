@@ -2,6 +2,7 @@ package com.hoquangnam45.pharmacy.service;
 
 import com.hoquangnam45.pharmacy.component.UserMapper;
 import com.hoquangnam45.pharmacy.constant.PaymentMethod;
+import com.hoquangnam45.pharmacy.entity.Cart;
 import com.hoquangnam45.pharmacy.entity.PaymentInfo;
 import com.hoquangnam45.pharmacy.entity.PhoneNumber;
 import com.hoquangnam45.pharmacy.entity.User;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -37,17 +39,13 @@ public class UserService {
     public User createUser(RegisterRequest registerRequest) {
         String encryptedPassword = passwordEncoder.encode(registerRequest.getPassword());
         User user = userMapper.createNewUser(registerRequest);
+        Cart cart = new Cart();
+        user.setCart(cart);
         user.setPassword(encryptedPassword);
-
-        User savedUser = userRepo.save(user);
-
-        // Create default COD payment method
-        PaymentInfo codPayment = PaymentInfo.builder()
+        user.setPaymentInfos(Set.of(PaymentInfo.builder()
                 .method(PaymentMethod.COD)
-                .user(savedUser)
-                .build();
-
-        return savedUser;
+                .build()));
+        return userRepo.save(user);
     }
 
     public User getUser(CustomAuthenticationPrincipal principal) {
