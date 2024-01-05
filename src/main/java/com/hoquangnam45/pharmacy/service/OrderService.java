@@ -15,22 +15,21 @@ import com.hoquangnam45.pharmacy.entity.MedicineListing;
 import com.hoquangnam45.pharmacy.entity.MedicineListingAudit;
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
 import com.hoquangnam45.pharmacy.entity.MedicinePackagingAudit;
-import com.hoquangnam45.pharmacy.entity.MedicinePreview;
 import com.hoquangnam45.pharmacy.entity.Order;
 import com.hoquangnam45.pharmacy.entity.OrderItem;
 import com.hoquangnam45.pharmacy.entity.PaymentInfo;
 import com.hoquangnam45.pharmacy.entity.Producer;
 import com.hoquangnam45.pharmacy.entity.ProducerAudit;
-import com.hoquangnam45.pharmacy.entity.Tag;
 import com.hoquangnam45.pharmacy.entity.TransactionInfo;
 import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.PlaceOrderCartRequest;
 import com.hoquangnam45.pharmacy.pojo.PlaceOrderRequest;
 import com.hoquangnam45.pharmacy.pojo.PlaceOrderRequestItem;
+import com.hoquangnam45.pharmacy.pojo.UpdateOrderDeliveryInfoPayment;
+import com.hoquangnam45.pharmacy.pojo.UpdateOrderDeliveryInfoRequest;
 import com.hoquangnam45.pharmacy.repo.CartItemRepo;
 import com.hoquangnam45.pharmacy.repo.DeliveryInfoRepo;
 import com.hoquangnam45.pharmacy.repo.MedicineListingRepo;
-import com.hoquangnam45.pharmacy.repo.MedicineRepo;
 import com.hoquangnam45.pharmacy.repo.OrderItemRepo;
 import com.hoquangnam45.pharmacy.repo.OrderRepo;
 import com.hoquangnam45.pharmacy.repo.PaymentRepo;
@@ -46,11 +45,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -238,5 +235,52 @@ public class OrderService {
                 .createdAt(lastUpdatedAt)
                 .build());
         return producerAudit;
+    }
+
+    public void updateOrderDeliveryInfo(UUID orderId, UpdateOrderDeliveryInfoRequest request) {
+        UUID userId = UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+        Order order = Optional.ofNullable(orderRepo.findByUser_IdAndId(userId, orderId))
+                .orElseThrow(() -> new ApiError(404, "Order not found"));
+        if (order.getStatus() != OrderStatus.NEW) {
+            throw new IllegalStateException("Order is already locked and cannot be updated further anymore");
+        }
+        DeliveryInfo deliveryInfo = Optional.ofNullable(deliveryInfoRepo.findByUser_IdAndId(userId, request.getDeliveryInfoId()))
+                .orElseThrow(() -> new ApiError(404, "Delivery not found"));
+        OffsetDateTime lastUpdatedAtDeliveryInfo = Optional.ofNullable(deliveryInfo.getUpdatedAt())
+                .orElseGet(deliveryInfo::getCreatedAt);
+        DeliveryInfoAudit deliveryInfoAudit = deliveryInfoAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(
+                deliveryInfo.getId().toString(), lastUpdatedAtDeliveryInfo);
+        if (deliveryInfoAudit == null) {
+            deliveryInfoAuditRepo.disableAllActiveAuditObject(deliveryInfo.getId().toString());
+            deliveryInfoAudit = deliveryInfoAuditRepo.save(createAuditDeliveryInfo(deliveryInfo, lastUpdatedAtDeliveryInfo));
+        }
+        order.setDeliveryInfo(deliveryInfoAudit);
+    }
+
+    public void updateOrderPaymentMethod(UUID orderId, UpdateOrderDeliveryInfoPayment request) {
+        UUID userId = UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+        Order order = Optional.ofNullable(orderRepo.findByUser_IdAndId(userId, orderId))
+                .orElseThrow(() -> new ApiError(404, "Order not found"));
+        if (order.getStatus() != OrderStatus.NEW) {
+            throw new IllegalStateException("Order is already locked and cannot be updated further anymore");
+        }
+        PaymentInfo paymentInfo = Optional.ofNullable(paymentRepo.findByUser_IdAndId(userId, request.getPaymentId()))
+                .orElseThrow(() -> new ApiError(404, "Delivery not found"));
+        // Sanity-check
+        TransactionInfo transactionInfo = order.getTransactionInfo();
+        if (transactionInfo.getStatus() != TransactionStatus.PENDING) {
+            // This should not happen if all the state handling is correct
+            throw new IllegalStateException("Transaction state for order is not valid");
+        }
+        transactionInfo.setPayment(paymentInfo);
+    }
+
+    // This should also remove any listeners for transaction that were created to handle third-party callback
+    public void cancelOrder(UUID orderId) {
+        UUID userId = UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+
+    }
+
+    public void transactOrder(UUID orderId) {
     }
 }

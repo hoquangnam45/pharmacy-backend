@@ -26,14 +26,12 @@ public class UserService {
     private final PhoneRepo phoneRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    private final PaymentRepo paymentRepo;
 
-    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder, PaymentRepo paymentRepo) {
+    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.phoneRepo = phoneRepo;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
-        this.paymentRepo = paymentRepo;
     }
 
     public User createUser(RegisterRequest registerRequest) {

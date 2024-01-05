@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface OrderRepo extends JpaRepository<Order, UUID> {
     boolean existsByListing_Id(UUID listingId);
+    Order findByUser_IdAndId(UUID userId, UUID orderId);
 }

@@ -10,7 +10,4 @@ import org.mapstruct.Mapping;
 @Mapper
 public interface OrderMapper {
     OrderCreationResponse mapToNewOrderResponse(Order order);
-
-    @Mapping(target = "orderItems", ignore = true)
-    PlaceOrderRequest mapToPlaceOrderRequestFromCartRequest(PlaceOrderCartRequest request);
 }
