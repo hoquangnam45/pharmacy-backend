@@ -1,6 +1,6 @@
 package com.hoquangnam45.pharmacy.controller.admin;
 
-import com.hoquangnam45.pharmacy.component.MedicineMapper;
+import com.hoquangnam45.pharmacy.component.mapper.MedicineMapper;
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
 import com.hoquangnam45.pharmacy.entity.UploadSession;
 import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;

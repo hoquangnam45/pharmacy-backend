@@ -42,5 +42,4 @@ public class MedicinePackaging {
 
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private OffsetDateTime deletedAt;
 }

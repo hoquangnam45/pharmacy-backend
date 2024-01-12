@@ -1,4 +1,4 @@
-package com.hoquangnam45.pharmacy.component;
+package com.hoquangnam45.pharmacy.component.mapper;
 
 import com.hoquangnam45.pharmacy.entity.DeliveryInfo;
 import com.hoquangnam45.pharmacy.entity.DeliveryInfoAudit;

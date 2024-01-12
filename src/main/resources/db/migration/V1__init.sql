@@ -74,6 +74,8 @@ create table producer(
     id uuid not null primary key default gen_random_uuid(),
     name varchar(255) not null unique,
     country varchar(255) not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
     constraint unique_producer_name_country unique(name, country)
 );
 
@@ -95,6 +97,8 @@ create table medicine(
     side_effect varchar(255) not null,
     usage_type varchar(255) not null,
     producer_id uuid not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
     constraint unique_medicine_name_producer unique(name, producer_id),
     constraint fk_medicine_producer_id foreign key(producer_id) references producer(id)
 );
@@ -162,6 +166,8 @@ create table medicine_packaging_x(
     packaging_unit varchar(255) not null,
     conversion_factor integer not null,
     conversion_factor_detail varchar(255) not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
     constraint unique_medicine_packaging_x_medicine_packaging unique(medicine_id, packaging_unit),
     constraint fk_medicine_packaging_x_medicine_id foreign key(medicine_id) references medicine(id)
 );
@@ -172,6 +178,9 @@ create table medicine_packaging_audit_x(
     packaging_unit varchar(255) not null,
     conversion_factor integer not null,
     conversion_factor_detail varchar(255) not null,
+    audit_object_id varchar(255) not null,
+    created_at timestamp not null,
+    active boolean not null default false,
     constraint unique_medicine_packaging_audit_x_medicine_packaging unique(medicine_id, packaging_unit),
     constraint fk_medicine_packaging_audit_x_medicine_id foreign key(medicine_id) references medicine_audit(id)
 );
@@ -181,6 +190,8 @@ create table listing(
     medicine_packaging_id uuid unique not null,
     price decimal not null,
     disable boolean not null default false,
+    created_at timestamp not null,
+    updated_at timestamp not null,
     constraint fk_listing_medicine_packaging_id foreign key(medicine_packaging_id) references medicine_packaging_x(id)
 );
 
@@ -205,6 +216,8 @@ create table delivery_info(
     phone_number_id uuid not null,
     recipient_name varchar(255),
     user_id uuid not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
     constraint fk_delivery_info_user_id foreign key(user_id) references user_info(id),
     constraint fk_delivery_info_phone_number_id foreign key(phone_number_id) references phone_number(id)
 );
@@ -227,6 +240,22 @@ create table delivery_info_audit(
     constraint fk_delivery_info_audit_phone_number_id foreign key(phone_number_id) references phone_number(id)
 );
 
+create table shopping_cart(
+    id uuid not null primary key default gen_random_uuid(),
+    user_id uuid not null,
+    constraint fk_shopping_cart_user_id foreign key(user_id) references user_info(id)
+);
+
+create table shopping_cart_item(
+    id uuid not null primary key default gen_random_uuid(),
+    cart_id uuid not null,
+    listing_id uuid not null,
+    quantity integer not null,
+    constraint unique_shopping_cart_item_cart_listing unique(cart_id, listing_id),
+    constraint fk_shopping_cart_item_cart_id foreign key(cart_id) references shopping_cart(id),
+    constraint fk_shopping_cart_item_listing_id foreign key(listing_id) references listing(id)
+);
+
 create table order_info(
     id uuid not null primary key default gen_random_uuid(),
     listing_id uuid not null,
@@ -241,18 +270,27 @@ create table order_info(
     constraint fk_order_info_delivery_info_id foreign key(delivery_info_id) references delivery_info_audit(id)
 );
 
-create table momo_payment_detail(
-    id uuid not null primary key default gen_random_uu(),
-    payment_id uuid not null,
-    momo_phone_number varchar(255) not null,
-    constraint fk_momo_payment_detail_payment_id foreign key(payment_id) references payment_info(id)
+create table order_item_info(
+    id uuid not null primary key default gen_random_uuid(),
+    listing_id uuid not null,
+    quantity integer not null,
+    order_id uuid not null,
+    constraint fk_order_item_info_listing_id foreign key(listing_id) references listing_audit(id),
+    constraint fk_order_item_info_order_id foreign key(order_id) references order_info(id)
 );
 
 create table payment_info(
-    id uuid not null primary key default gen_random_uu(),
+    id uuid not null primary key default gen_random_uuid(),
     method varchar(255) not null,
     user_id uuid not null,
     constraint fk_payment_info_user_id foreign key(user_id) references user_info(id)
+);
+
+create table momo_payment_detail(
+    id uuid not null primary key default gen_random_uuid(),
+    payment_id uuid not null,
+    momo_phone_number varchar(255) not null,
+    constraint fk_momo_payment_detail_payment_id foreign key(payment_id) references payment_info(id)
 );
 
 create table transaction_info(

@@ -39,4 +39,7 @@ public class PaymentInfo {
 
     @OneToOne(mappedBy = "payment")
     private MomoPaymentDetail momoPaymentDetail;
+
+    @OneToOne(mappedBy = "payment")
+    private TransactionInfo transactionInfo;
 }

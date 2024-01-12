@@ -61,5 +61,4 @@ public class Medicine {
 
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private OffsetDateTime deletedAt;
 }

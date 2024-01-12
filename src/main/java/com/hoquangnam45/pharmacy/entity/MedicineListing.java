@@ -38,5 +38,4 @@ public class MedicineListing {
 
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private OffsetDateTime deletedAt;
 }

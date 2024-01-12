@@ -1,4 +1,4 @@
-package com.hoquangnam45.pharmacy.component;
+package com.hoquangnam45.pharmacy.component.mapper;
 
 import com.hoquangnam45.pharmacy.entity.Medicine;
 import com.hoquangnam45.pharmacy.entity.MedicineListing;
@@ -17,7 +17,6 @@ import java.util.UUID;
 @Mapper
 public interface MedicineMapper {
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "previews", ignore = true)
     @Mapping(target = "id", ignore = true)
@@ -27,14 +26,12 @@ public interface MedicineMapper {
     Medicine createMedicine(MedicineDetailCreateRequest createRequest);
 
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "medicines", ignore = true)
     @Mapping(target = "id", ignore = true)
     Producer createProducer(ProducerCreateRequest createRequest);
 
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "cartItems", ignore = true)
     @Mapping(target = "disable", ignore = true)
@@ -43,7 +40,6 @@ public interface MedicineMapper {
     MedicineListing createMedicineListing(MedicineListingCreateRequest createRequest);
 
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "listings", ignore = true)
     @Mapping(target = "medicine", ignore = true)

@@ -34,6 +34,4 @@ public class CartItem {
     private UUID listingId;
 
     private int quantity;
-
-    private OffsetDateTime createdAt;
 }

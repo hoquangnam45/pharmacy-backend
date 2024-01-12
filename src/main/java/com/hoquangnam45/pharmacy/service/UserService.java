@@ -1,6 +1,6 @@
 package com.hoquangnam45.pharmacy.service;
 
-import com.hoquangnam45.pharmacy.component.UserMapper;
+import com.hoquangnam45.pharmacy.component.mapper.UserMapper;
 import com.hoquangnam45.pharmacy.constant.PaymentMethod;
 import com.hoquangnam45.pharmacy.entity.Cart;
 import com.hoquangnam45.pharmacy.entity.PaymentInfo;
@@ -10,7 +10,7 @@ import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.CustomAuthenticationPrincipal;
 import com.hoquangnam45.pharmacy.pojo.RegisterRequest;
 import com.hoquangnam45.pharmacy.pojo.UserProfile;
-import com.hoquangnam45.pharmacy.repo.PaymentRepo;
+import com.hoquangnam45.pharmacy.repo.CartRepo;
 import com.hoquangnam45.pharmacy.repo.PhoneRepo;
 import com.hoquangnam45.pharmacy.repo.UserRepo;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,24 +26,28 @@ public class UserService {
     private final PhoneRepo phoneRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final CartRepo cartRepo;
 
-    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder) {
+    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder, CartRepo cartRepo) {
         this.userRepo = userRepo;
         this.phoneRepo = phoneRepo;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.cartRepo = cartRepo;
     }
 
     public User createUser(RegisterRequest registerRequest) {
         String encryptedPassword = passwordEncoder.encode(registerRequest.getPassword());
         User user = userMapper.createNewUser(registerRequest);
-        Cart cart = new Cart();
-        user.setCart(cart);
         user.setPassword(encryptedPassword);
         user.setPaymentInfos(Set.of(PaymentInfo.builder()
                 .method(PaymentMethod.COD)
                 .build()));
-        return userRepo.save(user);
+        user = userRepo.save(user);
+        Cart cart = new Cart();
+        cart.setUser(user);
+        user.setCart(cartRepo.save(cart));
+        return user;
     }
 
     public User getUser(CustomAuthenticationPrincipal principal) {

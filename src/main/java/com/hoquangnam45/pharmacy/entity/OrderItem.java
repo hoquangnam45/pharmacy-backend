@@ -18,7 +18,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "order_info_item")
+@Table(name = "order_item_info")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,6 +36,4 @@ public class OrderItem {
     @ManyToOne
     @JoinColumn(name = "order_id", referencedColumnName = "id")
     private Order order;
-
-    private OffsetDateTime createdAt;
 }

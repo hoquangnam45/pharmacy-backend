@@ -52,6 +52,10 @@ public class Order {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "listing_id", referencedColumnName = "id")
+    private MedicineListingAudit listing;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

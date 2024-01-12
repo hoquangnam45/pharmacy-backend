@@ -1,6 +1,6 @@
 package com.hoquangnam45.pharmacy.controller;
 
-import com.hoquangnam45.pharmacy.component.OrderMapper;
+import com.hoquangnam45.pharmacy.component.mapper.OrderMapper;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.pojo.OrderCreationResponse;
 import com.hoquangnam45.pharmacy.pojo.PlaceOrderCartRequest;
@@ -81,16 +81,6 @@ public class OrderController {
             HttpServletRequest servletRequest) {
         String path = servletRequest.getServletPath();
         orderService.transactOrder(orderId);
-        return ResponseEntity.ok
-    }
-
-    @PostMapping
-    public ResponseEntity<List<?>> getAllOrderBelongToAccount() {
-        return null;
-    }
-
-    @PostMapping
-    public ResponseEntity<List<?>> getSpecificOrder() {
         return null;
     }
 }

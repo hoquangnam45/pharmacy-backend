@@ -36,7 +36,8 @@ public class TransactionInfo {
     @JoinColumn(name = "order_id", referencedColumnName = "id")
     private Order order;
 
-    @JoinColumn(name = "payment_id")
+    @OneToOne
+    @JoinColumn(name = "payment_id", referencedColumnName = "id")
     private PaymentInfo payment;
 
     private BigDecimal amount;

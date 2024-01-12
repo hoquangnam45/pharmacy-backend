@@ -28,5 +28,4 @@ public class Producer {
 
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private OffsetDateTime deletedAt;
 }

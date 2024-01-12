@@ -1,7 +1,7 @@
 package com.hoquangnam45.pharmacy.service;
 
-import com.hoquangnam45.pharmacy.component.AuditMapper;
-import com.hoquangnam45.pharmacy.component.OrderMapper;
+import com.hoquangnam45.pharmacy.component.mapper.AuditMapper;
+import com.hoquangnam45.pharmacy.component.mapper.OrderMapper;
 import com.hoquangnam45.pharmacy.component.OrderPriceCalculator;
 import com.hoquangnam45.pharmacy.constant.OrderStatus;
 import com.hoquangnam45.pharmacy.constant.TransactionStatus;
@@ -111,7 +111,7 @@ public class OrderService {
                 .orElseThrow(() -> new ApiError(404, "Not found delivery info"));
         OffsetDateTime deliveryInfoLastUpdatedAt = Optional.ofNullable(deliveryInfo.getUpdatedAt())
                 .orElseGet(deliveryInfo::getCreatedAt);
-        DeliveryInfoAudit deliveryInfoAudit = deliveryInfoAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(placeOrderRequest.getDeliveryInfoId().toString(), deliveryInfoLastUpdatedAt);
+        DeliveryInfoAudit deliveryInfoAudit = deliveryInfoAuditRepo.findByAuditInfo_AuditObjectIdAndAuditInfo_CreatedAt(placeOrderRequest.getDeliveryInfoId().toString(), deliveryInfoLastUpdatedAt);
         if (deliveryInfoAudit == null) {
             deliveryInfoAuditRepo.disableAllActiveAuditObject(deliveryInfo.getId().toString());
             deliveryInfoAudit = deliveryInfoAuditRepo.save(createAuditDeliveryInfo(deliveryInfo, deliveryInfoLastUpdatedAt));
@@ -135,13 +135,12 @@ public class OrderService {
                     .orElseThrow(() -> new ApiError(404, "Not found listing"));
             OffsetDateTime medicineListingLastUpdatedAt = Optional.ofNullable(medicineListing.getUpdatedAt())
                     .orElseGet(deliveryInfo::getCreatedAt);
-            MedicineListingAudit medicineListingAudit = medicineListingAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(medicineListing.getId().toString(), medicineListingLastUpdatedAt);
+            MedicineListingAudit medicineListingAudit = medicineListingAuditRepo.findByAuditInfo_AuditObjectIdAndAuditInfo_CreatedAt(medicineListing.getId().toString(), medicineListingLastUpdatedAt);
             if (medicineListingAudit == null) {
                 medicineListingAuditRepo.disableAllActiveAuditObject(medicineListing.getId().toString());
                 medicineListingAudit = medicineListingAuditRepo.save(createAuditMedicineListing(medicineListing, medicineListingLastUpdatedAt));
             }
             return OrderItem.builder()
-                    .createdAt(now)
                     .listing(medicineListingAudit)
                     .quantity(orderItem.getQuantity())
                     .order(newOrder)
@@ -180,7 +179,7 @@ public class OrderService {
                 .build());
         OffsetDateTime lastUpdatedAtMedicinePackaging = Optional.ofNullable(medicineListing.getPackaging().getUpdatedAt())
                 .orElseGet(medicineListing.getPackaging()::getCreatedAt);
-        MedicinePackagingAudit packagingAudit = medicinePackagingAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(medicineListing.getPackaging().getId().toString(), lastUpdatedAtMedicinePackaging);
+        MedicinePackagingAudit packagingAudit = medicinePackagingAuditRepo.findByAuditInfo_AuditObjectIdAndAuditInfo_CreatedAt(medicineListing.getPackaging().getId().toString(), lastUpdatedAtMedicinePackaging);
         if (packagingAudit == null) {
             medicinePackagingAuditRepo.disableAllActiveAuditObject(medicineListing.getPackaging().getId().toString());
             packagingAudit = medicinePackagingAuditRepo.save(createAuditMedicinePackaging(medicineListing.getPackaging(), lastUpdatedAtMedicinePackaging));
@@ -198,7 +197,7 @@ public class OrderService {
                 .build());
         OffsetDateTime lastUpdatedAtMedicine = Optional.ofNullable(medicinePackaging.getMedicine().getUpdatedAt())
                 .orElseGet(medicinePackaging.getMedicine()::getCreatedAt);
-        MedicineAudit medicineAudit = medicineAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(medicinePackaging.getMedicine().getId().toString(), lastUpdatedAtMedicine);
+        MedicineAudit medicineAudit = medicineAuditRepo.findByAuditInfo_AuditObjectIdAndAuditInfo_CreatedAt(medicinePackaging.getMedicine().getId().toString(), lastUpdatedAtMedicine);
         if (medicineAudit == null) {
             medicineAuditRepo.disableAllActiveAuditObject(medicinePackaging.getMedicine().getId().toString());
             medicineAudit = medicineAuditRepo.save(createAuditMedicine(medicinePackaging.getMedicine(), lastUpdatedAtMedicine));
@@ -216,7 +215,7 @@ public class OrderService {
                 .build());
         OffsetDateTime lastUpdatedAtProducer = Optional.ofNullable(medicine.getProducer().getUpdatedAt())
                 .orElseGet(medicine.getProducer()::getCreatedAt);
-        ProducerAudit producerAudit = producerAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(medicine.getProducer().getId().toString(), lastUpdatedAtProducer);
+        ProducerAudit producerAudit = producerAuditRepo.findByAuditInfo_AuditObjectIdAndAuditInfo_CreatedAt(medicine.getProducer().getId().toString(), lastUpdatedAtProducer);
         if (producerAudit == null) {
             producerAuditRepo.disableAllActiveAuditObject(medicine.getProducer().getId().toString());
             producerAudit = producerAuditRepo.save(createAuditProducer(medicine.getProducer(), lastUpdatedAtProducer));
@@ -248,7 +247,7 @@ public class OrderService {
                 .orElseThrow(() -> new ApiError(404, "Delivery not found"));
         OffsetDateTime lastUpdatedAtDeliveryInfo = Optional.ofNullable(deliveryInfo.getUpdatedAt())
                 .orElseGet(deliveryInfo::getCreatedAt);
-        DeliveryInfoAudit deliveryInfoAudit = deliveryInfoAuditRepo.findByAuditInfo_AuditObjectIdAndCreatedAt(
+        DeliveryInfoAudit deliveryInfoAudit = deliveryInfoAuditRepo.findByAuditInfo_AuditObjectIdAndAuditInfo_CreatedAt(
                 deliveryInfo.getId().toString(), lastUpdatedAtDeliveryInfo);
         if (deliveryInfoAudit == null) {
             deliveryInfoAuditRepo.disableAllActiveAuditObject(deliveryInfo.getId().toString());

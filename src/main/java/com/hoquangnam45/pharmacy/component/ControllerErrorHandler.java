@@ -1,4 +1,4 @@
-package com.hoquangnam45.pharmacy.controller;
+package com.hoquangnam45.pharmacy.component;
 
 import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.exception.UploadSessionInvalidException;
