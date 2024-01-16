@@ -1,12 +1,9 @@
 package com.hoquangnam45.pharmacy.entity;
 
-import com.hoquangnam45.pharmacy.constant.PermissionType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -62,8 +59,8 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<Order> placedOrders;
 
-    @OneToOne(mappedBy = "user")
-    private Cart cart;
+    @OneToMany(mappedBy = "user")
+    private Set<CartItem> cartItems;
 
     @OneToMany(mappedBy = "user")
     private Set<PaymentInfo> paymentInfos;

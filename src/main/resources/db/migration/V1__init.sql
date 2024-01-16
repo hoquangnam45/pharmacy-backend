@@ -240,19 +240,13 @@ create table delivery_info_audit(
     constraint fk_delivery_info_audit_phone_number_id foreign key(phone_number_id) references phone_number(id)
 );
 
-create table shopping_cart(
-    id uuid not null primary key default gen_random_uuid(),
-    user_id uuid not null,
-    constraint fk_shopping_cart_user_id foreign key(user_id) references user_info(id)
-);
-
 create table shopping_cart_item(
     id uuid not null primary key default gen_random_uuid(),
-    cart_id uuid not null,
+    user_id uuid not null,
     listing_id uuid not null,
     quantity integer not null,
-    constraint unique_shopping_cart_item_cart_listing unique(cart_id, listing_id),
-    constraint fk_shopping_cart_item_cart_id foreign key(cart_id) references shopping_cart(id),
+    constraint unique_shopping_cart_item_cart_listing unique(user_id, listing_id),
+    constraint fk_shopping_cart_item_user_id foreign key(user_id) references user_info(id),
     constraint fk_shopping_cart_item_listing_id foreign key(listing_id) references listing(id)
 );
 

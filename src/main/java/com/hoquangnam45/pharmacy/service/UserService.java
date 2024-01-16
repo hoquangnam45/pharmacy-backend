@@ -2,7 +2,6 @@ package com.hoquangnam45.pharmacy.service;
 
 import com.hoquangnam45.pharmacy.component.mapper.UserMapper;
 import com.hoquangnam45.pharmacy.constant.PaymentMethod;
-import com.hoquangnam45.pharmacy.entity.Cart;
 import com.hoquangnam45.pharmacy.entity.PaymentInfo;
 import com.hoquangnam45.pharmacy.entity.PhoneNumber;
 import com.hoquangnam45.pharmacy.entity.User;
@@ -44,9 +43,6 @@ public class UserService {
                 .method(PaymentMethod.COD)
                 .build()));
         user = userRepo.save(user);
-        Cart cart = new Cart();
-        cart.setUser(user);
-        user.setCart(cartRepo.save(cart));
         return user;
     }
 

@@ -2,7 +2,7 @@ package com.hoquangnam45.pharmacy.service;
 
 import com.hoquangnam45.pharmacy.component.mapper.AuditMapper;
 import com.hoquangnam45.pharmacy.component.mapper.OrderMapper;
-import com.hoquangnam45.pharmacy.component.OrderPriceCalculator;
+import com.hoquangnam45.pharmacy.component.PriceCalculator;
 import com.hoquangnam45.pharmacy.constant.OrderStatus;
 import com.hoquangnam45.pharmacy.constant.TransactionStatus;
 import com.hoquangnam45.pharmacy.entity.AuditInfo;
@@ -62,7 +62,7 @@ public class OrderService {
     private final MedicineListingAuditRepo medicineListingAuditRepo;
     private final DeliveryInfoAuditRepo deliveryInfoAuditRepo;
     private final DeliveryInfoRepo deliveryInfoRepo;
-    private final OrderPriceCalculator orderPriceCalculator;
+    private final PriceCalculator orderPriceCalculator;
     private final PaymentRepo paymentRepo;
     private final TransactionInfoRepo transactionInfoRepo;
     private final ProducerAuditRepo producerAuditRepo;
@@ -71,7 +71,7 @@ public class OrderService {
     private final CartItemRepo cartItemRepo;
     private final OrderMapper orderMapper;
 
-    public OrderService(OrderRepo orderRepo, UserRepo userRepo, MedicineAuditRepo medicineAuditRepo, MedicinePackagingAuditRepo medicinePackagingAuditRepo, MedicineListingRepo medicineListingRepo, MedicineListingAuditRepo medicineListingAuditRepo, DeliveryInfoAuditRepo deliveryInfoAuditRepo, DeliveryInfoRepo deliveryInfoRepo, OrderPriceCalculator orderPriceCalculator, PaymentRepo paymentRepo, TransactionInfoRepo transactionInfoRepo, ProducerAuditRepo producerAuditRepo, AuditMapper auditMapper, OrderItemRepo orderItemRepo, CartItemRepo cartItemRepo, OrderMapper orderMapper) {
+    public OrderService(OrderRepo orderRepo, UserRepo userRepo, MedicineAuditRepo medicineAuditRepo, MedicinePackagingAuditRepo medicinePackagingAuditRepo, MedicineListingRepo medicineListingRepo, MedicineListingAuditRepo medicineListingAuditRepo, DeliveryInfoAuditRepo deliveryInfoAuditRepo, DeliveryInfoRepo deliveryInfoRepo, PriceCalculator orderPriceCalculator, PaymentRepo paymentRepo, TransactionInfoRepo transactionInfoRepo, ProducerAuditRepo producerAuditRepo, AuditMapper auditMapper, OrderItemRepo orderItemRepo, CartItemRepo cartItemRepo, OrderMapper orderMapper) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
         this.medicineAuditRepo = medicineAuditRepo;
@@ -101,10 +101,13 @@ public class OrderService {
                 .deliveryInfoId(request.getDeliveryInfoId())
                 .paymentId(request.getPaymentId())
                 .build();
+
+        // Clear cart items after order has been created from this cart items
         cartItemRepo.deleteAllByCart_User_IdAndIdIn(userId, request.getCartItems());
         return createNewOrder(placeOrderRequest);
     }
 
+    // Copy all info needed for order to a separate table so that even if the info in the db is changed, it will stay the same for order
     public Order createNewOrder(PlaceOrderRequest placeOrderRequest) {
         UUID userId = UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
         DeliveryInfo deliveryInfo = Optional.ofNullable(deliveryInfoRepo.findByUser_IdAndId(userId, placeOrderRequest.getDeliveryInfoId()))
