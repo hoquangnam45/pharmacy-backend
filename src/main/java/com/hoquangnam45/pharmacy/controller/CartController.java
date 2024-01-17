@@ -54,9 +54,9 @@ public class CartController {
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    @GetMapping("{cartId}")
-    public ResponseEntity<List<CartItem>> getAllCartItem(@PathVariable("cartId") UUID cartId) {
-        return ResponseEntity.ok(cartService.getCartItems(cartId).getCartItems().stream()
+    @GetMapping("{userId}")
+    public ResponseEntity<List<CartItem>> getAllCartItem(@PathVariable("userId") UUID userId) {
+        return ResponseEntity.ok(cartService.getCartItems(userId).stream()
                 .map(this::mapCartItemEntityToPOJO)
                 .collect(Collectors.toList()));
     }

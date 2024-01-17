@@ -1,6 +1,5 @@
 package com.hoquangnam45.pharmacy.repo;
 
-import com.hoquangnam45.pharmacy.entity.Cart;
 import com.hoquangnam45.pharmacy.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

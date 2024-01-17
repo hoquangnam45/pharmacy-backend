@@ -9,7 +9,6 @@ import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.CustomAuthenticationPrincipal;
 import com.hoquangnam45.pharmacy.pojo.RegisterRequest;
 import com.hoquangnam45.pharmacy.pojo.UserProfile;
-import com.hoquangnam45.pharmacy.repo.CartRepo;
 import com.hoquangnam45.pharmacy.repo.PhoneRepo;
 import com.hoquangnam45.pharmacy.repo.UserRepo;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,14 +24,12 @@ public class UserService {
     private final PhoneRepo phoneRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    private final CartRepo cartRepo;
 
-    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder, CartRepo cartRepo) {
+    public UserService(UserMapper userMapper, UserRepo userRepo, PhoneRepo phoneRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.phoneRepo = phoneRepo;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
-        this.cartRepo = cartRepo;
     }
 
     public User createUser(RegisterRequest registerRequest) {

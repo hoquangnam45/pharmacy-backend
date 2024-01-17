@@ -5,7 +5,6 @@ import com.hoquangnam45.pharmacy.entity.MedicineListing;
 import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.PutCartItemRequest;
 import com.hoquangnam45.pharmacy.repo.CartItemRepo;
-import com.hoquangnam45.pharmacy.repo.CartRepo;
 import com.hoquangnam45.pharmacy.repo.MedicineListingRepo;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -76,10 +75,13 @@ public class CartService {
                 .build());
     }
 
-    public List<CartItem> getCartItems() {
+    public List<CartItem> getCartItems(UUID userCartId) {
         UUID userId = UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (!userId.equals(userCartId)) {
+            // Allow only owner to get their own cart
+            throw new ApiError(401, "No permission");
+        }
         return Optional.ofNullable(cartItemRepo.findCartItemUserIdFetched(userId))
-
                 .orElseThrow(() -> new ApiError(400, "Invalid cart"));
     }
 }
