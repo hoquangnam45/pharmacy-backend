@@ -68,15 +68,11 @@ public class UserService {
                 .orElse(null);
     }
 
-    public User getUserByEmail(RegisterRequest registerRequest) {
-        return Optional.ofNullable(registerRequest.getEmail())
-                .map(userRepo::findUserByEmail)
-                .orElse(null);
+    public User getUserByEmail(String email) {
+        return userRepo.findUserByEmail(email);
     }
 
-    public User getUserByUsername(RegisterRequest registerRequest) {
-        return Optional.ofNullable(registerRequest.getUsername())
-                .map(userRepo::findUserByUsername)
-                .orElse(null);
+    public User getUserByUsername(String username) {
+        return userRepo.findUserByUsername(username);
     }
 }

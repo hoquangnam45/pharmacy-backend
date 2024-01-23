@@ -23,6 +23,13 @@ pharma:
     issuer: ${PHARMA_JWT_ISSUER:example}
     accessTokenExpirationInMin: 60
     refreshTokenExpirationInMin: 43830
+  auth:
+    google:
+      clientId: ${PHARMA_AUTH_GOOGLE_CLIENT_ID}
+      clientSecret: ${PHARMA_AUTH_GOOGLE_CLIENT_SECRET}
+    facebook:
+    applicationUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:3000}
+    callbackUrl: ${PHARMA_AUTH_CALLBACK_URL:http//localhost:8888/api/v1/oauth/callback}
   upload:
     sessions:
       - type: medicine_preview

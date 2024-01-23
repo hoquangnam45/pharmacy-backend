@@ -1,5 +1,6 @@
 package com.hoquangnam45.pharmacy.controller;
 
+import com.amazonaws.services.apigatewayv2.model.Api;
 import com.hoquangnam45.pharmacy.entity.RefreshToken;
 import com.hoquangnam45.pharmacy.entity.User;
 import com.hoquangnam45.pharmacy.exception.ApiError;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("auth")
@@ -46,9 +48,16 @@ public class AuthController {
 
     @PostMapping("register")
     public ResponseEntity<JwtToken> register(@RequestBody RegisterRequest registerRequest) {
-        if (userService.getUserByEmail(registerRequest) != null) {
+        if (registerRequest.getEmail() == null && registerRequest.getUsername() == null) {
+            throw ApiError.badRequest("Missing user identity");
+        }
+        if (Optional.ofNullable(registerRequest.getEmail())
+                .map(userService::getUserByEmail)
+                .isPresent()) {
             throw ApiError.conflict("Email address is already registered");
-        } else if (userService.getUserByUsername(registerRequest) != null) {
+        } else if (Optional.ofNullable(registerRequest.getUsername())
+                .map(userService::getUserByUsername)
+                .isPresent()) {
             throw ApiError.conflict("Username is already registered");
         }
         User user = userService.createUser(registerRequest);
