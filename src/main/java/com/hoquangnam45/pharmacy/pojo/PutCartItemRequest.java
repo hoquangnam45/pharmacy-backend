@@ -12,5 +12,5 @@ import java.util.UUID;
 public class PutCartItemRequest {
     private final UUID listingId;
     private final int quantity;
-    private final UUID cartId;
+    private final UUID userId;
 }

@@ -40,5 +40,6 @@ public class CartItem {
     @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
     private User user;
 
+    @Column(name = "user_id")
     private UUID userId;
 }

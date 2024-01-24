@@ -28,7 +28,7 @@ public class CartService {
         if (request.getQuantity() <= 0) {
             throw new ApiError(400, "Added quantity must be positive");
         }
-        CartItem cartItem = cartItemRepo.findByListingIdAndCart_Id(request.getListingId(), request.getCartId());
+        CartItem cartItem = cartItemRepo.findByListingIdAndUser_Id(request.getListingId(), request.getUserId());
         int newQuantity = Optional.ofNullable(cartItem)
                 .map(CartItem::getQuantity)
                 .map(quantity -> quantity + request.getQuantity())
@@ -50,7 +50,7 @@ public class CartService {
         if (request.getQuantity() <= 0) {
             throw new ApiError(400, "Removed quantity must be positive");
         }
-        CartItem cartItem = cartItemRepo.findByListingIdAndCart_Id(request.getListingId(), request.getCartId());
+        CartItem cartItem = cartItemRepo.findByListingIdAndUser_Id(request.getListingId(), request.getUserId());
         if (cartItem == null) {
             return null;
         }

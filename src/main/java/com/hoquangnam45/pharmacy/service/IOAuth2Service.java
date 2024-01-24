@@ -14,7 +14,8 @@ public interface IOAuth2Service<T> {
     // that they currently login as the attacker
     // Reference: https://stackoverflow.com/questions/35985551/how-does-csrf-work-without-state-parameter-in-oauth2-0
     // Reference: https://web.archive.org/web/20170211202441/http://www.twobotechnologies.com/blog/2014/02/importance-of-state-in-oauth2.html
-    String getRedirectUrl(String state);
-    T getUser(String authorizationCode) throws Exception;
+    String getAuthorizationUrl(String state);
+    String getRedirectUri(String state);
+    T getUser(String state, String authorizationCode) throws Exception;
     String getProviderName();
 }

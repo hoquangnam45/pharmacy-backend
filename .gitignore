@@ -46,4 +46,4 @@ build/
 uploaded
 
 ### Designated place to store auto generated files from graalvm config agent for to be used for later compilation to native image by placing the generated files to META-INF/native-image
-config
+./config/

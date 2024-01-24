@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface RefreshTokenRepo extends JpaRepository<RefreshToken, UUID> {
     void deleteRefreshTokenByAccessToken(String accessToken);
 
-    @Query("SELECT * FROM RefreshToken r JOIN FETCH r.user")
+    @Query("SELECT r FROM RefreshToken r JOIN FETCH r.user WHERE r.accessToken=:accessToken")
     RefreshToken findRefreshTokenRepoByAccessToken(String accessToken);
 }

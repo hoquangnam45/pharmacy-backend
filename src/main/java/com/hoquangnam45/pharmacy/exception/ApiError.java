@@ -14,6 +14,10 @@ public class ApiError extends RuntimeException {
         this.detail = detail;
     }
 
+    public ApiError(int httpStatus, String message) {
+        this(httpStatus, message, null);
+    }
+
     public ApiError(HttpStatus httpStatus, String message) {
         this(httpStatus.value(), message, null);
     }

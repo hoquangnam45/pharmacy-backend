@@ -41,6 +41,7 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
                 .requestMatchers("/auth/**")
+                .requestMatchers("/oauth2/**")
                 .requestMatchers(HttpMethod.GET, "/user/profile/*");
     }
 

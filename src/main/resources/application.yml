@@ -26,11 +26,11 @@ pharma:
     refreshTokenExpirationInMin: 43830
   oauth2:
     google:
-      clientId: ${PHARMA_AUTH_GOOGLE_CLIENT_ID}
-      clientSecret: ${PHARMA_AUTH_GOOGLE_CLIENT_SECRET}
+      clientId: ${PHARMA_OAUTH2_GOOGLE_CLIENT_ID}
+      clientSecret: ${PHARMA_OAUTH2_GOOGLE_CLIENT_SECRET}
     facebook:
-      clientId: ${PHARMA_AUTH_FACEBOOK_CLIENT_ID}
-      clientSecret: ${PHARMA_AUTH_FACEBOOK_CLIENT_SECRET}
+      clientId: ${PHARMA_OAUTH2_FACEBOOK_CLIENT_ID}
+      clientSecret: ${PHARMA_OAUTH2 _FACEBOOK_CLIENT_SECRET}
   upload:
     sessions:
       - type: medicine_preview

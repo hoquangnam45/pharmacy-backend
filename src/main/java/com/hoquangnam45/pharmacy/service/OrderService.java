@@ -92,7 +92,7 @@ public class OrderService {
 
     public Order createNewOrderCart(PlaceOrderCartRequest request) {
         UUID userId = UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
-        List<CartItem> cartItems = cartItemRepo.findAllByCart_User_IdAndIdIn(userId, request.getCartItems());
+        List<CartItem> cartItems = cartItemRepo.findAllByUser_IdAndIdIn(userId, request.getCartItems());
         PlaceOrderRequest placeOrderRequest = PlaceOrderRequest.builder()
                 .orderItems(cartItems.stream().map(cartItem -> PlaceOrderRequestItem.builder()
                                 .listingId(cartItem.getListingId())
@@ -103,7 +103,7 @@ public class OrderService {
                 .build();
 
         // Clear cart items after order has been created from this cart items
-        cartItemRepo.deleteAllByCart_User_IdAndIdIn(userId, request.getCartItems());
+        cartItemRepo.deleteAllByUser_IdAndIdIn(userId, request.getCartItems());
         return createNewOrder(placeOrderRequest);
     }
 
