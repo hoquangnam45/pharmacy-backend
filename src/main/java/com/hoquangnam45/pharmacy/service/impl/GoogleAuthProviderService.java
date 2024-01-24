@@ -9,18 +9,26 @@ import com.hoquangnam45.pharmacy.pojo.GoogleAuthConfig;
 import com.hoquangnam45.pharmacy.service.IAuthProvider;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class GoogleAuthProviderService implements IAuthProvider {
     private final GoogleAuthConfig googleAuthConfig;
+    private final String callbackUrl;
 
     public GoogleAuthProviderService(OAuthConfig oauthConfig) {
         this.googleAuthConfig = oauthConfig.getGoogle();
+        this.callbackUrl = oauthConfig.getApplicationUrl();
     }
 
 
     @Override
-    public String getRedirectUrl() {
-        return new GoogleBrowserClientRequestUrl(googleAuthConfig.getClientId(), );
+    public String getRedirectUrl(String state) {
+        return new GoogleBrowserClientRequestUrl(googleAuthConfig.getClientId(), callbackUrl, List.of(
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile"))
+                .setState(state)
+                .build();
     }
 
     @Override
