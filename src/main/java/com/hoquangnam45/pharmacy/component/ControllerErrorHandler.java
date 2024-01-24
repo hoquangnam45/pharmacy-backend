@@ -11,13 +11,15 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.Optional;
+
 
 @ControllerAdvice
 public class ControllerErrorHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ApiError.class)
     public ResponseEntity<Object> handleApiError(ApiError err, WebRequest webRequest) {
         String path = ((ServletWebRequest) webRequest).getRequest().getServletPath();
-        return ResponseEntity.status(err.getHttpStatus()).body(new GenericResponse(err.getHttpStatus(), path, err.getMessage(), null));
+        return ResponseEntity.status(err.getHttpStatus()).body(new GenericResponse(err.getHttpStatus(), path, err.getMessage(), err.getDetail()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

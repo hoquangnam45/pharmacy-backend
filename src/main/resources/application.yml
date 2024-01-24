@@ -18,18 +18,19 @@ spring:
       maxFileSize: -1
       maxRequestSize: -1
 pharma:
+  applicationUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:3000}
   jwt:
     secret: ${PHARMA_JWT_SECRET:1234}
     issuer: ${PHARMA_JWT_ISSUER:example}
     accessTokenExpirationInMin: 60
     refreshTokenExpirationInMin: 43830
-  auth:
+  oauth2:
     google:
       clientId: ${PHARMA_AUTH_GOOGLE_CLIENT_ID}
       clientSecret: ${PHARMA_AUTH_GOOGLE_CLIENT_SECRET}
     facebook:
-    applicationUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:3000}
-    callbackUrl: ${PHARMA_AUTH_CALLBACK_URL:http//localhost:8888/api/v1/oauth/callback}
+      clientId: ${PHARMA_AUTH_FACEBOOK_CLIENT_ID}
+      clientSecret: ${PHARMA_AUTH_FACEBOOK_CLIENT_SECRET}
   upload:
     sessions:
       - type: medicine_preview
