@@ -4,9 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-// TODO: Add third party authentication login support
-// TODO: Add comment
-// TODO: Add rating
+// TODO: Add third party authentication login support -> implemented
+// TODO: Add comment -> pending copy needed from other project
+// TODO: Add rating ->
+// TODO: Add job for confirm email send out upon registered
 // TODO: Add chat + support if needed
 @SpringBootApplication
 @EnableScheduling
