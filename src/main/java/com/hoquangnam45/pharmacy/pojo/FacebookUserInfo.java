@@ -1,12 +1,19 @@
 package com.hoquangnam45.pharmacy.pojo;
 
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Key;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@RequiredArgsConstructor
 @Getter
-public class FacebookUserInfo {
-    private final String email;
-    private final String id;
-    private final String name;
+@NoArgsConstructor
+@Setter
+public class FacebookUserInfo extends GenericJson {
+    @Key("email")
+    private String email;
+    @Key("id")
+    private String id;
+    @Key("name")
+    private String name;
 }
