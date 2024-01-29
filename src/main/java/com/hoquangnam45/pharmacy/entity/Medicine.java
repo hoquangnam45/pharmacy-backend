@@ -59,6 +59,9 @@ public class Medicine {
     @OneToMany(mappedBy = "medicine")
     private Set<MedicinePreview> previews;
 
+    @OneToMany(mappedBy = "medicine")
+    private Set<Comment> comments;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

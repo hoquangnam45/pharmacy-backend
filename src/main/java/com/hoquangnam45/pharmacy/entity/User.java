@@ -64,4 +64,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<PaymentInfo> paymentInfos;
+
+    @OneToMany(mappedBy = "createdByUser")
+    private Set<Comment> comments;
 }

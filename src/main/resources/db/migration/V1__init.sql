@@ -299,6 +299,46 @@ create table transaction_info(
     constraint fk_transaction_info_order_id foreign key(order_id) references order_info(id),
     constraint fk_transaction_info_payment_id foreign key(payment_id) references payment_info(id)
 );
+
+create table comment (
+  id uuid not null primary key default gen_random_uuid(),
+  content text not null,
+  super_comment_id uuid,
+  medicine_id uuid not null,
+  created_by uuid,
+  created_at timestamp not null,
+  updated_at timestamp,
+  deleted_at timestamp,
+  constraint fk_comment_medicine_id foreign key (medicine_id) references medicine(id),
+  constraint fk_comment_created_by foreign key (created_by) references user_info(id),
+  constraint fk_comment_super_comment_id foreign key (super_comment_id) references comment(id)
+);
+
+create table chat_room (
+    id uuid not null primary key default gen_random_uuid(),
+    user_id uuid not null,
+    constraint fk_chat_room_user_id foreign key (user_id) references user_info(id)
+);
+
+create table chat_room_participant (
+    id uuid not null primary key default gen_random_uuid(),
+    user_id uuid not null,
+    room_id uuid not null,
+    constraint fk_chat_room_participant_user_id foreign key (user_id) references user_info (id),
+    constraint fk_chat_room_participant_room_id foreign key (room_id) references chat_room (id)
+);
+
+create table chat_message (
+    id uuid not null primary key default gen_random_uuid(),
+    chat_room_id UUID NOT NULL,
+    content TEXT NOT NULL,
+    user_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP,
+    constraint fk_message_user_id FOREIGN KEY (user_id) REFERENCES user_info (id),
+    constraint fk_message_chat_room_id FOREIGN KEY (chat_room_id) REFERENCES chat_room (id)
+);
 --insert into user_info(username, password) values('example_user', 'example_password');
 --insert into user_permission_x(user_id, role) values((select id from user_info where username='example_user'), 'ADMIN');
 

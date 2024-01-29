@@ -1,6 +1,7 @@
 package com.hoquangnam45.pharmacy.config;
 
 import com.hoquangnam45.pharmacy.component.mapper.AuditMapper;
+import com.hoquangnam45.pharmacy.component.mapper.CommentMapper;
 import com.hoquangnam45.pharmacy.component.mapper.MedicineMapper;
 import com.hoquangnam45.pharmacy.component.mapper.OrderMapper;
 import com.hoquangnam45.pharmacy.component.mapper.UserMapper;
@@ -29,5 +30,10 @@ public class MapperConfig {
     @Bean
     public OrderMapper orderMapper() {
         return Mappers.getMapper(OrderMapper.class);
+    }
+
+    @Bean
+    public CommentMapper commentMapper() {
+        return Mappers.getMapper(CommentMapper.class);
     }
 }
