@@ -1,5 +1,6 @@
 package com.hoquangnam45.pharmacy.exception;
 
+import jakarta.mail.MessagingException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -44,5 +45,9 @@ public class ApiError extends RuntimeException {
 
     public static ApiError badRequest(String message) {
         return new ApiError(HttpStatus.BAD_REQUEST, message);
+    }
+
+    public static ApiError internalServerError(String message) {
+        return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 }

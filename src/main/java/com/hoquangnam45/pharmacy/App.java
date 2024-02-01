@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 // TODO: Add third party authentication login support -> implemented
 // TODO: Add comment -> pending copy needed from other project -> copied not tested
-// TODO: Add rating ->
-// TODO: Add job for confirm email send out upon registered
+// TODO: Add rating -> working on
+// TODO: Add job for confirm email send out upon registered -> working on
 // TODO: Add chat + support if needed
 // TODO: Integrate with payment transaction processing service like momo / napas / bank / credit card
 // TODO: Start working on FE

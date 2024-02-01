@@ -40,6 +40,18 @@ pharma:
     local: true
   order:
     expiredDurationInDays: 3
+  verification:
+    email:
+      expireTimeInMin: 4320
+      length: 10
+    phoneNumber:
+      expireTimeInMin: 4320
+      length: 10
+  mail:
+    host: ${PHARMA_MAIL_HOST:smtp.gmail.com}
+    port: ${PHARMA_MAIL_PORT:587}
+    username: ${PHARMA_MAIL_USERNAME}
+    password: ${PHARMA_MAIL_PASSWORD}
 server:
   port: 8888
   servlet:

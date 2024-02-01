@@ -2,8 +2,6 @@ package com.hoquangnam45.pharmacy.config;
 
 import com.hoquangnam45.pharmacy.pojo.FacebookOAuth2Config;
 import com.hoquangnam45.pharmacy.pojo.GoogleOAuth2Config;
-import com.hoquangnam45.pharmacy.service.impl.FacebookOAuth2Service;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;

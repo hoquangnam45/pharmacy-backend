@@ -42,6 +42,7 @@ public class SecurityConfig {
         return web -> web.ignoring()
                 .requestMatchers("/auth/**")
                 .requestMatchers("/oauth2/**")
+                .requestMatchers("/verification/**")
                 .requestMatchers(HttpMethod.GET, "/user/profile/*");
     }
 

@@ -53,6 +53,16 @@ create table user_info(
       constraint fk_user_info_phone_id foreign key(phone_id) references phone_number(id)
 );
 
+create table verification_code(
+    id uuid not null primary key default gen_random_uuid(),
+    verification_code varchar(255) not null,
+    user_id uuid not null,
+    type varchar(255) not null,
+    last_sent_at timestamp not null,
+    expired_at timestamp not null,
+    constraint fk_otp_user_id foreign key(user_id) references user_info(id)
+);
+
 create table user_permission_x(
     id uuid not null primary key default gen_random_uuid(),
     role varchar(255) not null,

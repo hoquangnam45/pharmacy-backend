@@ -13,6 +13,7 @@ import com.hoquangnam45.pharmacy.pojo.RegisterRequest;
 import com.hoquangnam45.pharmacy.service.JwtService;
 import com.hoquangnam45.pharmacy.service.UserService;
 import io.micrometer.common.util.StringUtils;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ public class AuthController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<JwtToken> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<JwtToken> register(@RequestBody RegisterRequest registerRequest) throws Exception {
         if (registerRequest.getEmail() == null && registerRequest.getUsername() == null) {
             throw ApiError.badRequest("Missing user identity");
         }
