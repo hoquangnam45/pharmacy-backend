@@ -7,10 +7,10 @@ import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.GenericResponse;
 import com.hoquangnam45.pharmacy.repo.VerificationCodeRepo;
 import com.hoquangnam45.pharmacy.service.UserService;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,8 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("verification")
@@ -34,12 +38,22 @@ public class VerificationController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<GenericResponse> verify(
-            @RequestParam("verificationCode") String verificationCode,
-            @RequestParam("type") VerificationType type,
-            HttpServletRequest request) {
+    // Because it need to handle request come from email which is encoded in base64 to prevent url parameters escaping
+    // So that why this does not use normal way to get parameters
+    @GetMapping
+    public ResponseEntity<GenericResponse> verify(@RequestParam("code") String code, HttpServletRequest request) {
         String path = request.getServletPath();
+        Map<String, String> parameters = Stream.of(new String(Base64.getDecoder().decode(code)).split("&"))
+                .map(fragment -> fragment.split("="))
+                .filter(param -> param.length == 2)
+                .collect(Collectors.toMap(
+                        param -> param[0],
+                        param -> param[1]));
+        String verificationCode = Optional.ofNullable(parameters.get("verificationCode"))
+                .orElseThrow(() -> ApiError.badRequest("Missing verification code"));
+        VerificationType type = Optional.ofNullable(parameters.get("type"))
+                .map(VerificationType::valueOf)
+                .orElseThrow(() -> ApiError.badRequest("Missing verification type"));
         VerificationCode verification = Optional.ofNullable(verificationCodeRepo.findByTypeAndVerificationCode(type, verificationCode))
                 .orElseThrow(() -> ApiError.notFound("Not found verification code " + verificationCode + " for type " + type));
         boolean expired = verification.getExpiredAt().isBefore(OffsetDateTime.now(ZoneOffset.UTC));

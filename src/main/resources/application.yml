@@ -19,6 +19,7 @@ spring:
       maxRequestSize: -1
 pharma:
   applicationUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:3000}
+  apiUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:8888/api/v1}
   jwt:
     secret: ${PHARMA_JWT_SECRET:1234}
     issuer: ${PHARMA_JWT_ISSUER:example}

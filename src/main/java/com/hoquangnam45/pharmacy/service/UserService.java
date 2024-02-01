@@ -11,19 +11,21 @@ import com.hoquangnam45.pharmacy.entity.User;
 import com.hoquangnam45.pharmacy.exception.ApiError;
 import com.hoquangnam45.pharmacy.pojo.CustomAuthenticationPrincipal;
 import com.hoquangnam45.pharmacy.pojo.RegisterRequest;
-import com.hoquangnam45.pharmacy.pojo.SendEmailRequest;
+import com.hoquangnam45.pharmacy.pojo.SendEmailTemplateRequest;
 import com.hoquangnam45.pharmacy.pojo.UserProfile;
 import com.hoquangnam45.pharmacy.repo.VerificationCodeRepo;
 import com.hoquangnam45.pharmacy.repo.PhoneRepo;
 import com.hoquangnam45.pharmacy.repo.UserRepo;
-import com.hoquangnam45.pharmacy.service.impl.MailService;
-import jakarta.mail.MessagingException;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -37,6 +39,7 @@ public class UserService {
     private final VerificationCodeRepo verificationCodeRepo;
     private final VerificationConfig verificationConfig;
     private final IMailService mailService;
+    private final String apiUrl;
 
     public UserService(
             UserMapper userMapper,
@@ -45,7 +48,8 @@ public class UserService {
             PasswordEncoder passwordEncoder,
             VerificationCodeRepo verificationCodeRepo,
             VerificationConfig verificationConfig,
-            IMailService mailService) {
+            IMailService mailService,
+            @Value("${pharma.apiUrl}") String apiUrl) {
         this.userRepo = userRepo;
         this.phoneRepo = phoneRepo;
         this.passwordEncoder = passwordEncoder;
@@ -53,6 +57,7 @@ public class UserService {
         this.verificationCodeRepo = verificationCodeRepo;
         this.verificationConfig = verificationConfig;
         this.mailService = mailService;
+        this.apiUrl = apiUrl;
     }
 
     public User createUser(RegisterRequest registerRequest) throws Exception {
@@ -76,8 +81,10 @@ public class UserService {
     public void sendConfirmationEmail(String email, User user) throws Exception {
         String verificationCode = RandomStringUtils.randomAlphabetic(verificationConfig.getEmail().getLength());
 
-        mailService.sendEmail(SendEmailRequest.builder()
-                .content(verificationCode)
+        mailService.sendEmail(SendEmailTemplateRequest.builder()
+                .viewName("email/confirm_email")
+                .parameters(Map.of("verificationCode", verificationCode, "verificationLink", MessageFormat.format("{0}/verification?code={1}", apiUrl,
+                                Base64.getEncoder().encodeToString(MessageFormat.format("verificationCode={0}&type={1}", verificationCode, VerificationType.EMAIL).getBytes()))))
                 .toAddress(email)
                 .build());
 

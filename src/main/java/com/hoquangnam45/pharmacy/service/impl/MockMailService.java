@@ -40,6 +40,6 @@ public class MockMailService implements IMailService {
 
     @Override
     public void sendEmail(SendEmailRequest request) {
-        logger.info(MessageFormat.format("Sent email to [{0}] content [{1}]", request.getToAddress(), request.getContent()));
+        logger.info(MessageFormat.format("Sent email to [{0}] content [\n{1}\n]", request.getToAddress(), request.getContent()));
     }
 }
