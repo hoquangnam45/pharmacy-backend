@@ -1,8 +1,7 @@
 package com.hoquangnam45.pharmacy.service;
 
-import com.hoquangnam45.pharmacy.component.mapper.AuditMapper;
-import com.hoquangnam45.pharmacy.component.mapper.OrderMapper;
 import com.hoquangnam45.pharmacy.component.PriceCalculator;
+import com.hoquangnam45.pharmacy.component.mapper.AuditMapper;
 import com.hoquangnam45.pharmacy.constant.OrderStatus;
 import com.hoquangnam45.pharmacy.constant.TransactionStatus;
 import com.hoquangnam45.pharmacy.entity.AuditInfo;
@@ -69,9 +68,8 @@ public class OrderService {
     private final AuditMapper auditMapper;
     private final OrderItemRepo orderItemRepo;
     private final CartItemRepo cartItemRepo;
-    private final OrderMapper orderMapper;
 
-    public OrderService(OrderRepo orderRepo, UserRepo userRepo, MedicineAuditRepo medicineAuditRepo, MedicinePackagingAuditRepo medicinePackagingAuditRepo, MedicineListingRepo medicineListingRepo, MedicineListingAuditRepo medicineListingAuditRepo, DeliveryInfoAuditRepo deliveryInfoAuditRepo, DeliveryInfoRepo deliveryInfoRepo, PriceCalculator orderPriceCalculator, PaymentRepo paymentRepo, TransactionInfoRepo transactionInfoRepo, ProducerAuditRepo producerAuditRepo, AuditMapper auditMapper, OrderItemRepo orderItemRepo, CartItemRepo cartItemRepo, OrderMapper orderMapper) {
+    public OrderService(OrderRepo orderRepo, UserRepo userRepo, MedicineAuditRepo medicineAuditRepo, MedicinePackagingAuditRepo medicinePackagingAuditRepo, MedicineListingRepo medicineListingRepo, MedicineListingAuditRepo medicineListingAuditRepo, DeliveryInfoAuditRepo deliveryInfoAuditRepo, DeliveryInfoRepo deliveryInfoRepo, PriceCalculator orderPriceCalculator, PaymentRepo paymentRepo, TransactionInfoRepo transactionInfoRepo, ProducerAuditRepo producerAuditRepo, AuditMapper auditMapper, OrderItemRepo orderItemRepo, CartItemRepo cartItemRepo) {
         this.orderRepo = orderRepo;
         this.userRepo = userRepo;
         this.medicineAuditRepo = medicineAuditRepo;
@@ -87,7 +85,6 @@ public class OrderService {
         this.auditMapper = auditMapper;
         this.orderItemRepo = orderItemRepo;
         this.cartItemRepo = cartItemRepo;
-        this.orderMapper = orderMapper;
     }
 
     public Order createNewOrderCart(PlaceOrderCartRequest request) {
@@ -283,6 +280,7 @@ public class OrderService {
 
     }
 
+    // TODO: Implement payment service and handle transaction
     public void transactOrder(UUID orderId) {
     }
 }

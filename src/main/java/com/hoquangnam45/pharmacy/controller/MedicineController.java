@@ -19,13 +19,6 @@ public class MedicineController {
         this.medicineService = medicineService;
     }
 
-    @GetMapping("tag")
-    public ResponseEntity<PartialPage<Tag>> searchTags(
-            @RequestParam("query") String query,
-            @RequestParam(value = "limit", defaultValue = "5") Integer limit) {
-        return ResponseEntity.ok().body(medicineService.findTag(query, limit));
-    }
-
 //    @GetMapping
 //    public ResponseEntity<PartialPage<MedicineInfo>> getMedicineInfo() {
 //

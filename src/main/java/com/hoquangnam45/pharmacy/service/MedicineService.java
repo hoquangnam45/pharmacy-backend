@@ -15,7 +15,6 @@ import com.hoquangnam45.pharmacy.exception.UploadSessionInvalidException;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicineListingCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicinePackagingRequest;
-import com.hoquangnam45.pharmacy.pojo.PartialPage;
 import com.hoquangnam45.pharmacy.pojo.ProducerCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.UpdateListingRequest;
 import com.hoquangnam45.pharmacy.repo.FileMetadataRepo;
@@ -23,12 +22,10 @@ import com.hoquangnam45.pharmacy.repo.MedicineListingRepo;
 import com.hoquangnam45.pharmacy.repo.MedicinePackagingRepo;
 import com.hoquangnam45.pharmacy.repo.MedicinePreviewRepo;
 import com.hoquangnam45.pharmacy.repo.MedicineRepo;
-import com.hoquangnam45.pharmacy.repo.OrderRepo;
 import com.hoquangnam45.pharmacy.repo.ProducerRepo;
 import com.hoquangnam45.pharmacy.repo.TagRepo;
 import com.hoquangnam45.pharmacy.repo.UploadSessionFileMetadataRepo;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -54,21 +51,19 @@ public class MedicineService {
     private final TagRepo tagRepo;
     private final MedicineListingRepo medicineListingRepo;
     private final MedicinePackagingRepo medicinePackagingRepo;
-    private final OrderRepo orderRepo;
     private final IS3Service s3Service;
     private final UploadSessionService uploadSessionService;
     private final UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo;
     private final FileMetadataRepo fileMetadataRepo;
     private final MedicinePreviewRepo medicinePreviewRepo;
 
-    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, OrderRepo orderRepo, IS3Service s3Service, UploadSessionService uploadSessionService, UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo, FileMetadataRepo fileMetadataRepo, MedicinePreviewRepo medicinePreviewRepo) {
+    public MedicineService(MedicineRepo medicineRepo, ProducerRepo producerRepo, MedicineMapper medicineMapper, TagRepo tagRepo, MedicineListingRepo medicineListingRepo, MedicinePackagingRepo medicinePackagingRepo, IS3Service s3Service, UploadSessionService uploadSessionService, UploadSessionFileMetadataRepo uploadSessionFileMetadataRepo, FileMetadataRepo fileMetadataRepo, MedicinePreviewRepo medicinePreviewRepo) {
         this.medicineRepo = medicineRepo;
         this.producerRepo = producerRepo;
         this.medicineMapper = medicineMapper;
         this.tagRepo = tagRepo;
         this.medicineListingRepo = medicineListingRepo;
         this.medicinePackagingRepo = medicinePackagingRepo;
-        this.orderRepo = orderRepo;
         this.s3Service = s3Service;
         this.uploadSessionService = uploadSessionService;
         this.uploadSessionFileMetadataRepo = uploadSessionFileMetadataRepo;
@@ -196,13 +191,6 @@ public class MedicineService {
     public MedicineListing createListing(MedicineListingCreateRequest createRequest) {
         MedicineListing medicineListing = medicineMapper.createMedicineListing(createRequest);
         return medicineListingRepo.save(medicineListing);
-    }
-
-    public PartialPage<Tag> findTag(String tag, int limit) {
-        List<Tag> tags = tagRepo.findAllByValueLike("%" + tag + "%", Pageable.ofSize(limit + 1).first());
-        boolean more = tags.size() > limit;
-        tags.remove(tags.size() - 1);
-        return new PartialPage<>(more, tags);
     }
 
     public void deleteMedicine(UUID id) throws IOException {
