@@ -48,6 +48,7 @@ pharma:
       expireTimeInMin: 4320
       length: 10
   mail:
+    mock: true
     host: ${PHARMA_MAIL_HOST:smtp.gmail.com}
     port: ${PHARMA_MAIL_PORT:587}
     username: ${PHARMA_MAIL_USERNAME}

@@ -16,4 +16,5 @@ public class EmailConfig {
     private Integer port;
     private String username;
     private String password;
+    private Boolean mock;
 }

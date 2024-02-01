@@ -10,6 +10,7 @@ import com.hoquangnam45.pharmacy.service.impl.MockMailService;
 import com.hoquangnam45.pharmacy.service.impl.MockS3Service;
 import com.hoquangnam45.pharmacy.service.impl.S3Service;
 import org.apache.tika.Tika;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,6 +18,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.thymeleaf.TemplateEngine;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.Properties;
 
 @Configuration
@@ -35,7 +37,6 @@ public class AppConfig {
         }
     }
 
-    @Bean
     public JavaMailSender javaMailSender(EmailConfig emailConfig) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(emailConfig.getHost());
@@ -54,7 +55,13 @@ public class AppConfig {
     }
 
     @Bean
-    public IMailService mainService(TemplateEngine templateEngine, JavaMailSender javaMailSender) {
-        return new MockMailService(templateEngine);
+    public IMailService mainService(
+            TemplateEngine templateEngine,
+            EmailConfig emailConfig) {
+        if (Optional.ofNullable(emailConfig.getMock()).orElse(true)) {
+            return new MockMailService(templateEngine);
+        } else {
+            return new MailService(templateEngine, javaMailSender(emailConfig));
+        }
     }
 }
