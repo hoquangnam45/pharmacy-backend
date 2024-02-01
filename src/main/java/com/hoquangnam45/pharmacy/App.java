@@ -6,9 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 // TODO: Add third party authentication login support -> implemented
 // TODO: Add comment -> pending copy needed from other project -> copied not tested
-// TODO: Add rating -> working on
+// TODO: Add rating
 // TODO: Add confirm email send out upon registered -> implemented
-// TODO: Add chat + support if needed -> looking into firebase
+// TODO: Add chat + support if needed (looking into firebase)
+// TODO: Refactor so that listing is coupled with product, packaging is replaced with options
 // TODO: Integrate with payment transaction processing service like momo / napas / bank / credit card
 // TODO: Start working on FE
 // TODO: Implement search product api

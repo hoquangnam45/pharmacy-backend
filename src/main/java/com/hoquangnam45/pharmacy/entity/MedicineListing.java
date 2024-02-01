@@ -25,7 +25,7 @@ public class MedicineListing {
     @GeneratedValue
     private UUID id;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "medicine_packaging_id", referencedColumnName = "id")
     private MedicinePackaging packaging;
 

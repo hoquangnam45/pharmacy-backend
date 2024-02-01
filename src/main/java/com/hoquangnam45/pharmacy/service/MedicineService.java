@@ -164,12 +164,7 @@ public class MedicineService {
                             .map(medicineMapper::createMedicineListing)
                             .map(peek(listing -> listing.setPackaging(medicinePackaging)))
                             .map(medicineListingRepo::save)
-                            .ifPresent(listing -> {
-                                Set<MedicineListing> listings = Optional.ofNullable(medicinePackaging.getListings())
-                                        .orElseGet(HashSet::new);
-                                listings.add(listing);
-                                medicinePackaging.setListings(listings);
-                            });
+                            .ifPresent(medicinePackaging::setListing);
                     return medicinePackaging;
                 })
                 .collect(Collectors.toList());
@@ -230,5 +225,9 @@ public class MedicineService {
             listing.setPrice(updateListingRequest.getPrice());
         }
         return listing;
+    }
+
+    public List<Medicine> searchMedicine(MedicineFilter searchFilter) {
+
     }
 }
