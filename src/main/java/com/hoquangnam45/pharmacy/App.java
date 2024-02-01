@@ -7,11 +7,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 // TODO: Add third party authentication login support -> implemented
 // TODO: Add comment -> pending copy needed from other project -> copied not tested
 // TODO: Add rating -> working on
-// TODO: Add job for confirm email send out upon registered -> working on
+// TODO: Add confirm email send out upon registered -> implemented
 // TODO: Add chat + support if needed
 // TODO: Integrate with payment transaction processing service like momo / napas / bank / credit card
 // TODO: Start working on FE
 // TODO: Setup deployment / pipeline / config for production
+// TODO: Refactor to use queue for heavy IO tasks instead of blocking api (mail)
 @SpringBootApplication
 @EnableScheduling
 public class App {
