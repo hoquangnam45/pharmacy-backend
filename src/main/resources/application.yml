@@ -31,7 +31,7 @@ pharma:
       clientSecret: ${PHARMA_OAUTH2_GOOGLE_CLIENT_SECRET}
     facebook:
       clientId: ${PHARMA_OAUTH2_FACEBOOK_CLIENT_ID}
-      clientSecret: ${PHARMA_OAUTH2 _FACEBOOK_CLIENT_SECRET}
+      clientSecret: ${PHARMA_OAUTH2_FACEBOOK_CLIENT_SECRET}
   upload:
     sessions:
       - type: medicine_preview

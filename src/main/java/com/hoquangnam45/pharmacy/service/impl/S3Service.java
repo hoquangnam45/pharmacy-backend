@@ -90,8 +90,7 @@ public class S3Service implements IS3Service {
                             .collect(Collector.of(
                                     ObjectMetadata::new,
                                     (acc, entry) -> acc.addUserMetadata(entry.getKey(), entry.getValue()),
-                                    (v1, v2) -> v1))
-                    )
+                                    (v1, v2) -> v1)))
             );
         }
     }
