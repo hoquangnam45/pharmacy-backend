@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Getter
-public class MedicineInfo {
+public class MedicineListingInfo {
     private final UUID id;
     private final String name;
     private final List<MedicineListing> listings;

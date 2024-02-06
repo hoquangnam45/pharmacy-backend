@@ -12,6 +12,5 @@ import java.util.UUID;
 public class MedicineListing {
     private final UUID id;
     private final PackagingUnit packagingUnit;
-    private final String packagingUnitFriendlyName;
     private final BigDecimal price;
 }

@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 // TODO: Refactor so that listing is coupled with product, packaging is replaced with options
 // TODO: Integrate with payment transaction processing service like momo / napas / bank / credit card
 // TODO: Start working on FE
-// TODO: Implement search product api
+// TODO: Implement search product api -> Implemented, not tested
 // TODO: Setup deployment / pipeline / config for production
 // TODO: Refactor to use queue for heavy IO tasks instead of blocking api (mail)
 @SpringBootApplication

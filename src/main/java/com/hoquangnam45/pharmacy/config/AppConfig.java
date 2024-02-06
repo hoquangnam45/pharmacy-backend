@@ -1,8 +1,6 @@
 package com.hoquangnam45.pharmacy.config;
 
-import com.bastiaanjansen.otp.HMACAlgorithm;
-import com.bastiaanjansen.otp.SecretGenerator;
-import com.bastiaanjansen.otp.TOTPGenerator;
+import com.hoquangnam45.pharmacy.repo.BaseJpaRepository;
 import com.hoquangnam45.pharmacy.service.IMailService;
 import com.hoquangnam45.pharmacy.service.IS3Service;
 import com.hoquangnam45.pharmacy.service.impl.MailService;
@@ -10,18 +8,18 @@ import com.hoquangnam45.pharmacy.service.impl.MockMailService;
 import com.hoquangnam45.pharmacy.service.impl.MockS3Service;
 import com.hoquangnam45.pharmacy.service.impl.S3Service;
 import org.apache.tika.Tika;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.thymeleaf.TemplateEngine;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.Properties;
 
 @Configuration
+@EnableJpaRepositories(basePackages = "com.hoquangnam45.pharmacy.repo", repositoryBaseClass = BaseJpaRepository.class)
 public class AppConfig {
     @Bean
     public Tika tika() {

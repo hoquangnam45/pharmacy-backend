@@ -5,14 +5,19 @@ import com.hoquangnam45.pharmacy.controller.admin.MedicineAdminController;
 import com.hoquangnam45.pharmacy.entity.FileMetadata;
 import com.hoquangnam45.pharmacy.entity.Medicine;
 import com.hoquangnam45.pharmacy.entity.MedicineListing;
+import com.hoquangnam45.pharmacy.entity.MedicineListing_;
 import com.hoquangnam45.pharmacy.entity.MedicinePackaging;
+import com.hoquangnam45.pharmacy.entity.MedicinePackaging_;
 import com.hoquangnam45.pharmacy.entity.MedicinePreview;
+import com.hoquangnam45.pharmacy.entity.Medicine_;
 import com.hoquangnam45.pharmacy.entity.Producer;
 import com.hoquangnam45.pharmacy.entity.Tag;
+import com.hoquangnam45.pharmacy.entity.Tag_;
 import com.hoquangnam45.pharmacy.entity.UploadSession;
 import com.hoquangnam45.pharmacy.entity.UploadSessionFileMetadata;
 import com.hoquangnam45.pharmacy.exception.UploadSessionInvalidException;
 import com.hoquangnam45.pharmacy.pojo.MedicineDetailCreateRequest;
+import com.hoquangnam45.pharmacy.pojo.MedicineFilter;
 import com.hoquangnam45.pharmacy.pojo.MedicineListingCreateRequest;
 import com.hoquangnam45.pharmacy.pojo.MedicinePackagingRequest;
 import com.hoquangnam45.pharmacy.pojo.ProducerCreateRequest;
@@ -21,11 +26,14 @@ import com.hoquangnam45.pharmacy.repo.FileMetadataRepo;
 import com.hoquangnam45.pharmacy.repo.MedicineListingRepo;
 import com.hoquangnam45.pharmacy.repo.MedicinePackagingRepo;
 import com.hoquangnam45.pharmacy.repo.MedicinePreviewRepo;
+import com.hoquangnam45.pharmacy.repo.BaseJpaRepository;
 import com.hoquangnam45.pharmacy.repo.MedicineRepo;
 import com.hoquangnam45.pharmacy.repo.ProducerRepo;
 import com.hoquangnam45.pharmacy.repo.TagRepo;
 import com.hoquangnam45.pharmacy.repo.UploadSessionFileMetadataRepo;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -34,11 +42,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.hoquangnam45.pharmacy.util.Functions.peek;
 import static java.util.function.Predicate.not;
@@ -227,7 +237,44 @@ public class MedicineService {
         return listing;
     }
 
-    public List<Medicine> searchMedicine(MedicineFilter searchFilter) {
+    public List<Medicine> searchMedicine(Specification<Medicine> initialSpec, MedicineFilter searchFilter, Pageable pageable) {
+        List<Specification<Medicine>> searchSpecs = Stream.of(
+                initialSpec,
+                Optional.ofNullable(searchFilter.getName())
+                        .map(MedicineService::toLikeSearchTerm)
+                        .map(name -> toSpec((root, query, criteriaBuilder) -> criteriaBuilder.like(criteriaBuilder.upper(root.get(Medicine_.name)), name.toUpperCase())))
+                        .orElse(null),
+                Optional.ofNullable(searchFilter.getDescription())
+                        .map(MedicineService::toLikeSearchTerm)
+                        .map(description -> toSpec((root, query, criteriaBuilder) -> criteriaBuilder.like(root.get(Medicine_.description), description.toUpperCase())))
+                        .orElse(null),
+                Optional.ofNullable(searchFilter.getPriceFrom())
+                        .map(priceFrom -> toSpec((root, query, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root
+                                .join(Medicine_.allowPackagingUnits)
+                                .join(MedicinePackaging_.listing)
+                                .get(MedicineListing_.price), priceFrom)
+                        )).orElse(null),
+                Optional.ofNullable(searchFilter.getPriceTo())
+                        .map(priceTo -> toSpec((root, query, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(root
+                                .join(Medicine_.allowPackagingUnits)
+                                .join(MedicinePackaging_.listing)
+                                .get(MedicineListing_.price), priceTo)
+                        ))
+                        .orElse(null),
+                Optional.ofNullable(searchFilter.getTags())
+                        .map(tags -> toSpec((root, query, criteriaBuilder) -> root.join(Medicine_.tags).get(Tag_.value).in(tags)))
+                        .orElse(null)
+        ).filter(Objects::nonNull).toList();
 
+        return medicineRepo.findAll(Specification.allOf(searchSpecs), (int) pageable.getOffset(), pageable.getPageSize(), pageable.getSort());
+    }
+
+    private static String toLikeSearchTerm(String term) {
+        return "%" + term + "%";
+    }
+
+    // NOTE: Avoid type casting with lambda
+    public static Specification<Medicine> toSpec(Specification<Medicine> spec) {
+        return spec;
     }
 }

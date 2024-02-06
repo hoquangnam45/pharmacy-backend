@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,8 @@ public class MedicinePackagingAudit {
     private Integer conversionFactor;
     private String conversionFactorDetail;
 
-    @OneToMany(mappedBy = "packaging")
-    private Set<MedicineListingAudit> listings;
+    @OneToOne(mappedBy = "packaging")
+    private MedicineListingAudit listing;
 
     @Embedded
     private AuditInfo auditInfo;

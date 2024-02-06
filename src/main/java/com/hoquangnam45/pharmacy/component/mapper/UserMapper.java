@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper
 public interface UserMapper {
+    @Mapping(target = "comments", ignore = true)
     @Mapping(target = "cartItems", ignore = true)
     @Mapping(target = "paymentInfos", ignore = true)
     @Mapping(target = "placedOrders", ignore = true)
