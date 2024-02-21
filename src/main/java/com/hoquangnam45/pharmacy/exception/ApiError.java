@@ -50,4 +50,8 @@ public class ApiError extends RuntimeException {
     public static ApiError internalServerError(String message) {
         return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
+
+    public static ApiError unimplemented(String message) {
+        return new ApiError(HttpStatus.NOT_IMPLEMENTED, message);
+    }
 }

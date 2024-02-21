@@ -33,6 +33,8 @@ public class PaymentInfo {
     @Enumerated(EnumType.STRING)
     private PaymentMethod method;
 
+    private String methodDetail;
+
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;

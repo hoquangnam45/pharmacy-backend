@@ -2,7 +2,7 @@ package com.hoquangnam45.pharmacy.constant;
 
 public enum PaymentMethod {
     NAPAS,
-    WALLET,
+    EWALLET,
     CARD,
     COD
 }

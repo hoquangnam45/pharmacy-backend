@@ -39,6 +39,10 @@ pharma:
         expiredDurationInMin: 60
         prefix: ./uploaded/medicine_preview
     local: true
+  payment:
+    momo:
+      apiUrl:
+      apiToken:
   order:
     expiredDurationInDays: 3
   verification:
