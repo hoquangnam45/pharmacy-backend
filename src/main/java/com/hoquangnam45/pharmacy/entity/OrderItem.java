@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -32,6 +33,8 @@ public class OrderItem {
     private MedicineListingAudit listing;
 
     private Integer quantity;
+    private BigDecimal totalPrice;
+    private BigDecimal price;
 
     @ManyToOne
     @JoinColumn(name = "order_id", referencedColumnName = "id")

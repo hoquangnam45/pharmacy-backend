@@ -33,6 +33,7 @@ public class MedicineAudit {
     private UUID id;
     private String name;
     private String description;
+    private String shortDescription;
 
     @ManyToMany
     @JoinTable(

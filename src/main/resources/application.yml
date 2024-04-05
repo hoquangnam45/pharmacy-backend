@@ -18,6 +18,8 @@ spring:
       maxFileSize: -1
       maxRequestSize: -1
 pharma:
+  store:
+    name: Nhà thuốc Thanh Trà
   applicationUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:3000}
   apiUrl: ${PHARMA_AUTH_APPLICATION_URL:http://localhost:8888/api/v1}
   jwt:

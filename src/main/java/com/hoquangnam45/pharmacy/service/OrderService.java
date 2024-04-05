@@ -42,6 +42,7 @@ import com.hoquangnam45.pharmacy.repo.audit.ProducerAuditRepo;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -143,6 +144,8 @@ public class OrderService {
             return OrderItem.builder()
                     .listing(medicineListingAudit)
                     .quantity(orderItem.getQuantity())
+                    .price(medicineListingAudit.getPrice())
+                    .totalPrice(medicineListingAudit.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
                     .order(newOrder)
                     .build();
         }).map(orderItemRepo::save).collect(Collectors.toSet()));

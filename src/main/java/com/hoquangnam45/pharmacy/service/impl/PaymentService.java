@@ -1,35 +1,37 @@
 package com.hoquangnam45.pharmacy.service.impl;
 
-import com.amazonaws.services.apigatewayv2.model.Api;
 import com.hoquangnam45.pharmacy.constant.TransactionStatus;
 import com.hoquangnam45.pharmacy.entity.TransactionInfo;
 import com.hoquangnam45.pharmacy.exception.ApiError;
+import com.hoquangnam45.pharmacy.exception.PaymentUnsuccessException;
 import com.hoquangnam45.pharmacy.repo.TransactionInfoRepo;
 import com.hoquangnam45.pharmacy.service.IPaymentService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 @Service
-public class PaymentService implements IPaymentService {
+@Qualifier("PaymentService")
+public class PaymentService implements IPaymentService<Object> {
     private final MomoPaymentService momoPaymentService;
-    private final NapasPaymentService napasPaymentService;
     private final TransactionInfoRepo transactionInfoRepo;
+    private final CodPaymentService codPaymentService;
+
 
     private static final Set<TransactionStatus> finalStates = Set.of(
             TransactionStatus.TRANSACTED,
             TransactionStatus.CANCELLED
     );
 
-    public PaymentService(MomoPaymentService momoPaymentService, NapasPaymentService napasPaymentService, TransactionInfoRepo transactionInfoRepo) {
+    public PaymentService(MomoPaymentService momoPaymentService, TransactionInfoRepo transactionInfoRepo, CodPaymentService codPaymentService) {
         this.momoPaymentService = momoPaymentService;
-        this.napasPaymentService = napasPaymentService;
         this.transactionInfoRepo = transactionInfoRepo;
+        this.codPaymentService = codPaymentService;
     }
 
     @Override
-    public void startPayment(TransactionInfo transactionInfo) {
+    public Object startPayment(TransactionInfo transactionInfo) throws PaymentUnsuccessException {
         if (transactionInfo.getStatus() == TransactionStatus.TRANSACTED) {
             throw ApiError.badRequest("Payment has already completed");
         } else if (transactionInfo.getStatus() == TransactionStatus.CANCELLED) {
@@ -38,40 +40,39 @@ public class PaymentService implements IPaymentService {
             throw ApiError.badRequest("Payment is awaiting user to completed");
         }
 
-        executeTransactionHandler(transactionInfo, IPaymentService::startPayment);
+        Object result = getPaymentService(transactionInfo).startPayment(transactionInfo);
+        if (transactionInfo.getStatus() != TransactionStatus.PENDING)
+        {
+            // Something must be wrong
+            throw new PaymentUnsuccessException("Payment has encountered error");
+        }
+
+        transactionInfoRepo.save(transactionInfo);
+        return result;
     }
 
     @Override
     public void cancelPayment(TransactionInfo transactionInfo) {
-        if (transactionInfo.getStatus() != TransactionStatus.PENDING) {
-            throw ApiError.internalServerError("Payment has not been started yet");
-        }
-        executeTransactionHandler(transactionInfo, IPaymentService::cancelPayment);
+        transactionInfo.setStatus(TransactionStatus.CANCELLED);
+        transactionInfoRepo.save(transactionInfo);
     }
 
     @Override
     public void transactPayment(TransactionInfo transactionInfo) {
-        if (transactionInfo.getStatus() != TransactionStatus.PENDING) {
-            throw ApiError.internalServerError("Payment has not been started yet");
-        }
-        executeTransactionHandler(transactionInfo, IPaymentService::transactPayment);
+        transactionInfo.setStatus(TransactionStatus.TRANSACTED);
+        transactionInfoRepo.save(transactionInfo);
     }
 
-    public void executeTransactionHandler(TransactionInfo transactionInfo, BiConsumer<IPaymentService, TransactionInfo> transactionHandler) {
-        switch (transactionInfo.getPayment().getMethod()) {
-            case COD -> transactionInfo.setStatus(TransactionStatus.PENDING);
-            case CARD ->
-                // TODO: Consider support this type of payment method
-                    throw ApiError.unimplemented("Not supported yet");
-            case NAPAS -> transactionHandler.accept(napasPaymentService, transactionInfo);
+    public IPaymentService<?> getPaymentService(TransactionInfo transactionInfo) {
+        return switch (transactionInfo.getPayment().getMethod()) {
+            case COD -> codPaymentService;
+            case CARD, NAPAS -> throw ApiError.unimplemented("Not supported yet");
             case EWALLET -> {
-                // TODO: Support more type of e-wallet
                 if (transactionInfo.getPayment().getMethodDetail().equals("MOMO")) {
-                    transactionHandler.accept(momoPaymentService, transactionInfo);
-                } else {
-                    throw ApiError.unimplemented("Not supported yet");
+                    yield momoPaymentService;
                 }
+                throw ApiError.unimplemented("Not supported yet");
             }
-        }
+        };
     }
 }

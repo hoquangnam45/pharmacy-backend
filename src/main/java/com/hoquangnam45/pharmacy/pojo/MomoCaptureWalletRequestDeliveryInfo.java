@@ -9,6 +9,6 @@ import lombok.Getter;
 @Builder
 public class MomoCaptureWalletRequestDeliveryInfo {
     private final String deliveryAddress;
-    private final String deliveryFee;
+    private final Long deliveryFee;
     private final String quantity;
 }

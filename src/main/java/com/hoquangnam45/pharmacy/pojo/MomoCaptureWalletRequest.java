@@ -7,6 +7,7 @@ import lombok.Getter;
 import java.util.List;
 import java.util.UUID;
 
+// Reference: https://developers.momo.vn/v3/vi/docs/payment/api/wallet/onetime/
 @Getter
 @AllArgsConstructor
 @Builder

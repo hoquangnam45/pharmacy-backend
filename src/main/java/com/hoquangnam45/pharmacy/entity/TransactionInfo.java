@@ -41,6 +41,7 @@ public class TransactionInfo {
     private PaymentInfo payment;
 
     private BigDecimal amount;
+    private BigDecimal deliveryFee;
 
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;

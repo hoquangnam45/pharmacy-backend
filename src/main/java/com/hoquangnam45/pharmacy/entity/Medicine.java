@@ -32,6 +32,7 @@ public class Medicine {
     private UUID id;
     private String name;
     private String description;
+    private String shortDescription;
 
     @ManyToMany
     @JoinTable(
