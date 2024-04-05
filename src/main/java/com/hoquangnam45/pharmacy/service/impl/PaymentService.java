@@ -11,8 +11,19 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
+// Order -> Payment -> Transaction (Void, Partial, Full, Refund)
+// Refund transaction will cancel a payment, suppose that the payment is incomplete (partially paid or unpaid at all), a refund transaction will refund all of the previous pay transaction
+// Void transaction will be used to verify if a payment method is working or not
+// Partial transaction could be used for installment payment, multiple partial transactions if reached the payment amount will trigger a full transaction
+// Full transaction will trigger the change of payment status
+// A new order created, which the user can then choose a payment method, then proceed the payment
+// after proceed with payment, the payment result could be received at a later time, during which
+// a transaction info is created with the state as PENDING, after the payment result is confirmed
+// partially or full, the state is then proceed to PARTIAL or TRANSACTED accordingly, multiple
+// partial transactions that add up to the complete amount will trigger a full transaction will
+// complete the transaction, at anypoint in this step, a REFUND transaction could be used which will
+// revert past transactions. A cancelled transaction is final and cannot be changed anymore
 @Service
-@Qualifier("PaymentService")
 public class PaymentService implements IPaymentService<Object> {
     private final MomoPaymentService momoPaymentService;
     private final TransactionInfoRepo transactionInfoRepo;
